@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intranet Livestream Portal</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="navbar-brand">IntraStream</div>
+            <ul class="nav-links">
+                <li class="nav-item active" data-target="0">Home</li>
+                <li class="nav-item" data-target="1">Streams</li>
+                <li class="nav-item" id="console-nav" data-target="2">Console</li>
+                <li class="nav-item" data-target="3">Info</li>
+            </ul>
+            <div class="auth-section">
+                <button id="login-btn" class="btn-auth">Log In</button>
+            </div>
+        </nav>
+
+        <!-- Main Content - Horizontal Scroller -->
+        <div class="horizontal-scroller" id="scroller">
+            <!-- Home Card -->
+            <div class="scroller-card active" id="card-home">
+                <div class="card-container home">
+                <!-- Left Main Content -->
+                <div class="home-main">
+                    <h1>Premium video meetings for your intranet</h1>
+                    <p class="subtitle">Secure, private livestreaming for your organization.</p>
+                    <p class="subtitle">Join or start a stream right from your browser.</p>
+                    
+                    <div class="stream-entry">
+                        <div class="code-section">
+                            <div class="input-box">
+                                <input type="text" id="stream-code" required="required" placeholder="xxx-xxxx-xxx" />
+                                <span class="code-span stream-code">Enter the Stream Code</span>
+                            </div>
+                            <div class="advanced-settings" id="advanced-settings">
+                                <div class="input-box">
+                                    <input type="text" id="stream-ip" required="required" placeholder="stream.intranet.com" />
+                                    <span class="code-span stream-code">Server Network Location</span>
+                                </div>
+                                <div class="input-box">
+                                    <input type="text" id="stream-port" required="required" placeholder="1985" />
+                                    <span class="code-span stream-code">Stream Port Number</span>
+                                </div>
+                                <div class="input-box">
+                                    <input type="text" id="stream-schema" required="required" placeholder="HTTP" />
+                                    <span class="code-span stream-code">Stream Schema</span>
+                                </div>
+                                <div class="input-box">
+                                    <input type="text" id="stream-vhost" required="required" placeholder="__defaultvhost__" />
+                                    <span class="code-span stream-code">Stream VHost</span>
+                                </div>
+                            </div>
+                            <button class="btn-enter">Enter</button>
+                        </div>
+
+                        <a href="#" class="advanced-toggle" id="advanced-toggle">Click to open advanced Connection Settings</a>
+                                            
+                    </div>
+                
+                    <div class="divider">or</div>
+                
+                    <button class="btn-new">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                        START A NEW STREAM
+                    </button>
+                </div>
+
+                <!-- Right SVG Animation Area -->
+                <div class="home-animation">
+                    <image src="assets/images/livestream.svg" alt="Streaming Animation" class="streaming-animation">
+                </div>
+                </div>
+            </div>
+
+            <!-- Stream List Card -->
+            <div class="scroller-card" id="card-streams">
+                <div class="card-container streams">
+                <div class="streams-header">
+                    <h2>Available Streams</h2>
+                    <!-- <div class="stream-filter">
+                        <select title="Filter streams" id="stream-filter">
+                            <option>All Streams</option>
+                            <option>Public Only</option>
+                            <option>Private</option>
+                        </select>
+                    </div> -->
+                </div>
+                <div class="stream-list" id="public-streams">
+                    <!-- Stream items will be populated by JS -->
+                    <div class="stream-item">
+                        <div class="stream-thumbnail">
+                            <img src="assets/images/stream1.jpg" alt="Stream thumbnail">
+                            <span class="live-badge">LIVE</span>
+                            <span class="quality-info">1080p • 30fps</span>
+                        </div>
+                        <div class="stream-info">
+                            <h3>Weekly Team Meeting</h3>
+                            <p class="stream-author">Jane Doe</p>
+                            <p class="stream-meta">Started 2 hours ago • 45 viewers</p>
+                        </div>
+                    </div>
+                    <div class="stream-item">
+                        <div class="stream-thumbnail">
+                            <img src="assets/images/stream1.jpg" alt="Stream thumbnail">
+                            <span class="live-badge">LIVE</span>
+                            <span class="quality-info">1080p • 30fps</span>
+                        </div>
+                        <div class="stream-info">
+                            <h3>Weekly Team Meeting</h3>
+                            <p class="stream-author">Jane Doe</p>
+                            <p class="stream-meta">Started 2 hours ago • 45 viewers</p>
+                        </div>
+                    </div>
+                    <div class="stream-item">
+                        <div class="stream-thumbnail">
+                            <img src="assets/images/stream1.jpg" alt="Stream thumbnail">
+                            <span class="live-badge">LIVE</span>
+                            <span class="quality-info">1080p • 30fps</span>
+                        </div>
+                        <div class="stream-info">
+                            <h3>Weekly Team Meeting</h3>
+                            <p class="stream-author">Jane Doe</p>
+                            <p class="stream-meta">Started 2 hours ago • 45 viewers</p>
+                        </div>
+                    </div>
+                    <div class="stream-item">
+                        <div class="stream-thumbnail">
+                            <img src="assets/images/stream1.jpg" alt="Stream thumbnail">
+                            <span class="live-badge">LIVE</span>
+                            <span class="quality-info">1080p • 30fps</span>
+                        </div>
+                        <div class="stream-info">
+                            <h3>Weekly Team Meeting</h3>
+                            <p class="stream-author">Jane Doe</p>
+                            <p class="stream-meta">Started 2 hours ago • 45 viewers</p>
+                        </div>
+                    </div>
+                    <div class="stream-item">
+                        <div class="stream-thumbnail">
+                            <img src="assets/images/stream1.jpg" alt="Stream thumbnail">
+                            <span class="live-badge">LIVE</span>
+                            <span class="quality-info">1080p • 30fps</span>
+                        </div>
+                        <div class="stream-info">
+                            <h3>Weekly Team Meeting</h3>
+                            <p class="stream-author">Jane Doe</p>
+                            <p class="stream-meta">Started 2 hours ago • 45 viewers</p>
+                        </div>
+                    </div>
+                    <!-- More stream items... -->
+                </div>
+                <div class="private-streams-notice" id="private-streams-notice">
+                    <p>Log in to view private streams!</p>
+                </div>
+                <!-- <div class="scroll-indicator">
+                    <span>↓ Scroll for more</span>
+                </div> -->
+                </div>
+            </div>
+
+            <!-- Console Card (changes based on auth) -->
+            <div class="scroller-card" id="card-console">
+                <div class="card-container console">
+                <div class="console-container" id="console-content">
+                    <!-- Content will be replaced by JS based on auth -->
+                </div>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="scroller-card" id="card-info">
+                <div class="info-container">
+                    <h2>About IntraStream</h2>
+                    <div class="version-info">
+                        <p>Version: 6.0.166.3a</p>
+                        <p>Last Updated: 15 / 05 / 2025</p>
+                    </div>
+                    <div class="contributors">
+                        <h3>Contributors</h3>
+                        <ul>
+                            <li>Jason Yang Jiepeng</li>
+                            <li>NPL ITP Development Group</li>
+                        </ul>
+                    </div>
+                    <div class="tech-stack">
+                        <h3>Technology Stack</h3>
+                        <p>Built with modern web technologies including HTML5, CSS3, JavaScript, and WebRTC.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Indicator -->
+        <div class="page-indicator">
+            <span class="indicator-dot active" data-index="0"></span>
+            <span class="indicator-dot" data-index="1"></span>
+            <span class="indicator-dot" data-index="2"></span>
+            <span class="indicator-dot" data-index="3"></span>
+        </div>
+    </div>
+
+    <script src="scripts/main.js"></script>
+</body>
+
+</html>
