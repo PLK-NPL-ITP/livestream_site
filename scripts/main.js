@@ -325,22 +325,22 @@ document.addEventListener('DOMContentLoaded', function () {
             const now = new Date();
             timeLabels.push(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
 
-            // Generate new simulated data
+            // Generate new simulated data and round to 2 decimal places
             const cpuBase = Math.random() * 30 + 20;
-            cpuTotalData.push(Math.min(100, Math.max(0, cpuBase + (Math.random() * 6 - 3))));
-            cpuServiceData.push(Math.min(cpuTotalData[cpuTotalData.length - 1],
-                Math.max(0, cpuBase * 0.7 + (Math.random() * 4 - 2))));
+            cpuTotalData.push(parseFloat(Math.min(100, Math.max(0, cpuBase + (Math.random() * 6 - 3))).toFixed(2)));
+            cpuServiceData.push(parseFloat(Math.min(cpuTotalData[cpuTotalData.length - 1],
+                Math.max(0, cpuBase * 0.7 + (Math.random() * 4 - 2))).toFixed(2)));
 
             const memBase = Math.random() * 30 + 20;
-            memTotalData.push(Math.min(100, Math.max(0, memBase + (Math.random() * 6 - 3))));
-            memServiceData.push(Math.min(memTotalData[memTotalData.length - 1],
-                Math.max(0, memBase * 0.7 + (Math.random() * 4 - 2))));
+            memTotalData.push(parseFloat(Math.min(100, Math.max(0, memBase + (Math.random() * 6 - 3))).toFixed(2)));
+            memServiceData.push(parseFloat(Math.min(memTotalData[memTotalData.length - 1],
+                Math.max(0, memBase * 0.7 + (Math.random() * 4 - 2))).toFixed(2)));
 
             const networkBase = Math.random() * 1000;
-            networkUpData.push(Math.min(1024, Math.max(0, networkBase + (Math.random() * 100 - 50))));
-            networkDownData.push(Math.min(1024, Math.max(0, networkBase + (Math.random() * 100 - 50))));
+            networkUpData.push(parseFloat(Math.min(2048, Math.max(0, networkBase + (Math.random() * 100 - 50))).toFixed(2)));
+            networkDownData.push(parseFloat(Math.min(2048, Math.max(0, networkBase + (Math.random() * 100 - 50))).toFixed(2)));
 
-            diskData.push(Math.min(100, Math.max(0, diskData[diskData.length - 1] + (Math.random() * 2 - 1))));
+            diskData.push(parseFloat(Math.min(100, Math.max(0, diskData[diskData.length - 1] + (Math.random() * 2 - 1))).toFixed(2)));
 
             // Update charts
             cpuChart.data.labels = timeLabels;
@@ -360,18 +360,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Update displayed values
             document.getElementById('cpu-value').textContent =
-                `${cpuTotalData[cpuTotalData.length - 1].toFixed(1)}% (${cpuServiceData[cpuServiceData.length - 1].toFixed(1)}%)`;
+                `${cpuTotalData[cpuTotalData.length - 1]}% (${cpuServiceData[cpuServiceData.length - 1]}%)`;
 
             document.getElementById('memory-value').textContent =
-                `${memTotalData[memTotalData.length - 1].toFixed(1)}% (${memServiceData[memServiceData.length - 1].toFixed(1)}%)`;
+                `${memTotalData[memTotalData.length - 1]}% (${memServiceData[memServiceData.length - 1]}%)`;
 
             document.getElementById('network-value').textContent =
-                `${networkUpData[networkUpData.length - 1].toFixed(0)}↑ ${networkDownData[networkDownData.length - 1].toFixed(0)}↓ Kbps`;
+                `${networkUpData[networkUpData.length - 1]}↑ ${networkDownData[networkDownData.length - 1]}↓ Kbps`;
 
-            document.getElementById('disk-value').textContent = `${diskData[diskData.length - 1].toFixed(1)}%`;
+            document.getElementById('disk-value').textContent = `${diskData[diskData.length - 1]}%`;
 
-            // Update charts with adaptive Y-axis for memory
-            // updateMemoryYAxis();
+            // Update charts
             memoryChart.update();
             cpuChart.update();
             networkChart.update();
@@ -398,19 +397,19 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Initial data population
+        // Initial data population - also rounded to 2 decimal places
         for (let i = 0; i < maxDataPoints; i++) {
             const cpuBase = Math.random() * 30 + 20;
-            cpuTotalData[i] = cpuBase;
-            cpuServiceData[i] = cpuBase * 0.7;
+            cpuTotalData[i] = parseFloat(cpuBase.toFixed(2));
+            cpuServiceData[i] = parseFloat((cpuBase * 0.7).toFixed(2));
 
             const memBase = Math.random() * 30 + 20;
-            memTotalData[i] = Math.floor(memBase);
-            memServiceData[i] = Math.floor(memBase * Math.random());
+            memTotalData[i] = parseFloat(memBase.toFixed(2));
+            memServiceData[i] = parseFloat((memBase * Math.random()).toFixed(2));
 
-            networkUpData[i] = Math.random() * 300 + 100;
-            networkDownData[i] = Math.random() * 300 + 100;
-            diskData[i] = Math.random() * 20 + 30;
+            networkUpData[i] = parseFloat((Math.random() * 300 + 100).toFixed(2));
+            networkDownData[i] = parseFloat((Math.random() * 300 + 100).toFixed(2));
+            diskData[i] = parseFloat((Math.random() * 20 + 30).toFixed(2));
         }
 
         // Initial update
@@ -578,7 +577,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 section.classList.toggle('expand')
                 toggle.textContent = 'Click to hide advanced Connection Settings';
             }
-          });
+        });
+        setTimeout(() => {
+            document.getElementById("home-animation-svg").style.opacity = 1;
+            var style = document.createElement('style');
+            style.innerHTML = `
+                .livestream-icon svg {
+                    animation: iconEntrance 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+                }
+
+                .livestream-icon::before {
+                    animation: pulse 1.5s ease-out 0.5s forwards;
+                }
+            `
+            document.head.appendChild(style);
+        }, 500);
     }
 
     function toggleLogin() {

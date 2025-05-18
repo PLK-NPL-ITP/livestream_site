@@ -33,7 +33,9 @@
 .DS_Store
 *.heap
 *.exe
-/.vscode
+
+/.
+.hintrc
 
 cmake-build-debug
 /trunk/ide/srs_clion/CMakeCache.txt
@@ -43,3 +45,4 @@ cmake-build-debug
 /trunk/ide/srs_clion/srs
 /trunk/ide/srs_clion/Testing/
 /trunk/ide/vscode-build
+.vscode/
