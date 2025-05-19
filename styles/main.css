@@ -363,12 +363,14 @@ h1 {
     color: rgba(0, 0, 0, 0.5);
     text-transform: uppercase;
     transition: all 0.5s;
+    transform-origin: left center;
 }
 
 .input-box input:valid~.code-span,
 .input-box input:focus~.code-span {
     color: var(--primary-color);
-    transform: translateX(-15px) translateY(-20px) scale(0.7);
+    transform-origin: left center;
+    transform: translateX(20px) translateY(-20px) scale(0.7);
     /* font-size: 0.65em; */
     padding: 0 10px;
     background: white;
