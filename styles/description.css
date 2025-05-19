@@ -1,0 +1,108 @@
+.stream-description {
+    color: var(--gray-color);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    max-height: 60px;
+    line-height: 1.4;
+}
+
+/* 在网格视图下隐藏描述 */
+.stream-list:not(.list-view) .stream-description {
+    display: none;
+}
+
+/* 在列表视图下显示描述 */
+.stream-list.list-view .stream-description {
+    display: -webkit-box;
+    -webkit-line-clamp: var(--desc-lines, 3);
+    line-clamp: var(--desc-lines, 3);
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    padding-right: 10px;
+    /* 使用自定义属性来控制描述行数，方便JavaScript动态计算 */
+}
+
+/* 空描述样式 */
+.stream-list.list-view .stream-description.empty-description {
+    font-style: italic;
+    color: var(--gray-color);
+    opacity: 0.8;
+    white-space: normal;
+    display: block;
+}
+
+/* 鼠标悬停时的高亮效果 */
+.stream-list.list-view .stream-item:hover .stream-description {
+    color: var(--dark-color);
+}
+
+/* 流类型和可见性标签样式 */
+.stream-tag,
+.stream-visibility {
+    display: none;
+}
+
+/* 标签容器样式 */
+.stream-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+/* 标签视图标签显示样式 */
+.tags-view .stream-tag,
+.tags-view .stream-visibility {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    margin-right: 6px;
+    margin-bottom: 4px;
+    color: white;
+}
+
+.tags-view .stream-tag {
+    background-color: var(--secondary-color);
+}
+
+.tags-view .stream-visibility {
+    background-color: var(--primary-color);
+}
+
+.tags-view .stream-visibility.private {
+    background-color: var(--gray-color);
+}
+
+/* 修复tags-view下thumbnail显示问题 */
+.tags-view .stream-thumbnail {
+    height: 100px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tags-view .stream-thumbnail img {
+    width: fit-content;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 移动设备响应式优化 */
+@media (max-width: 768px) {
+    .stream-list.list-view .stream-description {
+        /* 移动设备上可以显示更多行 */
+        -webkit-line-clamp: var(--desc-lines-mobile, 4);
+        line-clamp: var(--desc-lines-mobile, 4);
+    }
+    
+    /* 移动设备上的标签间距和尺寸调整 */
+    .tags-view .stream-tag,
+    .tags-view .stream-visibility {
+        padding: 1px 4px;
+        margin-right: 4px;
+    }
+}

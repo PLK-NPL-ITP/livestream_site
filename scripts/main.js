@@ -794,4 +794,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize the first card as active
     goToCard(0);
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        setTimeout(() => {
+            goToCard(currentIndex);
+        }, 500);
+    });
 });
