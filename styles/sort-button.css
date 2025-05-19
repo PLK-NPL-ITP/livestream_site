@@ -1,0 +1,17 @@
+.sort-icon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0.2); /* 非激活状态下使用深色 */
+    transition: filter 0.3s ease;
+}
+
+#sort-streams-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#sort-streams-btn.active .sort-icon {
+    filter: brightness(0) invert(1); /* 激活状态下的图标为白色 */
+}
