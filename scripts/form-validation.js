@@ -215,18 +215,36 @@ document.addEventListener('DOMContentLoaded', function() {
         // 如果输入为空，显示"请输入内容"提示
         if (!value) {
             showError(input, "Error: This field is required");
-            return false;
+            return { isValid: false, error: "此字段不能为空" };
         }
         
         const result = validatorFn(value);
         
         if (result !== true) {
             showError(input, result);
-            return false;
+            return { isValid: false, error: result };
         }
         
         removeError(input);
-        return true;
+        return { isValid: true };
+    }
+    
+    // 获取输入字段的显示名称
+    function getFieldDisplayName(input) {
+        switch(input.id) {
+            case 'stream-code':
+                return '直播码';
+            case 'stream-ip':
+                return '服务器地址';
+            case 'stream-port':
+                return '端口号';
+            case 'stream-schema':
+                return '协议';
+            case 'stream-vhost':
+                return 'VHost';
+            default:
+                return '输入字段';
+        }
     }
     
     // 验证所有输入的函数
@@ -234,18 +252,63 @@ document.addEventListener('DOMContentLoaded', function() {
         // 首先检查是否显示高级设置
         const isAdvancedVisible = (advancedSettings.style.display === 'flex');
         
+        let isAllValid = true;
+        const errors = [];
+        
         // 先验证直播码
-        let isValid = validateInput(streamCodeInput, validators.streamCode);
+        const streamCodeResult = validateInput(streamCodeInput, validators.streamCode);
+        if (!streamCodeResult.isValid) {
+            isAllValid = false;
+            errors.push({
+                field: getFieldDisplayName(streamCodeInput),
+                error: streamCodeResult.error
+            });
+        }
         
         // 如果高级设置可见，则验证所有字段
         if (isAdvancedVisible) {
-            isValid = validateInput(streamIpInput, validators.serverLocation) && isValid;
-            isValid = validateInput(streamPortInput, validators.portNumber) && isValid;
-            isValid = validateInput(streamSchemaInput, validators.schema) && isValid;
-            isValid = validateInput(streamVhostInput, validators.vhost) && isValid;
+            // 验证服务器地址
+            const ipResult = validateInput(streamIpInput, validators.serverLocation);
+            if (!ipResult.isValid) {
+                isAllValid = false;
+                errors.push({
+                    field: getFieldDisplayName(streamIpInput),
+                    error: ipResult.error
+                });
+            }
+            
+            // 验证端口号
+            const portResult = validateInput(streamPortInput, validators.portNumber);
+            if (!portResult.isValid) {
+                isAllValid = false;
+                errors.push({
+                    field: getFieldDisplayName(streamPortInput),
+                    error: portResult.error
+                });
+            }
+            
+            // 验证协议
+            const schemaResult = validateInput(streamSchemaInput, validators.schema);
+            if (!schemaResult.isValid) {
+                isAllValid = false;
+                errors.push({
+                    field: getFieldDisplayName(streamSchemaInput),
+                    error: schemaResult.error
+                });
+            }
+            
+            // 验证VHost
+            const vhostResult = validateInput(streamVhostInput, validators.vhost);
+            if (!vhostResult.isValid) {
+                isAllValid = false;
+                errors.push({
+                    field: getFieldDisplayName(streamVhostInput),
+                    error: vhostResult.error
+                });
+            }
         }
         
-        return isValid;
+        return { isValid: isAllValid, errors: errors };
     }
     
     // 为Enter按钮添加点击事件
@@ -254,15 +317,36 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         // 验证表单
-        if (validateAllInputs()) {
+        const validationResult = validateAllInputs();
+        if (validationResult.isValid) {
             // 确保URL参数已更新
             updateURLParams();
             
             // 验证通过，执行加入直播流的操作
             const streamCode = streamCodeInput.value.trim();
-            alert(`Success! Joining stream: ${streamCode}`);
-            // 这里可以添加跳转代码
-            // window.location.href = `/stream/${streamCode}`;
+            
+            // 显示成功toast消息
+            toast.success('连接成功', `正在加入直播: ${streamCode}`);
+            
+            // 这里可以添加跳转代码 - 延迟一下让用户看到toast消息
+            setTimeout(() => {
+                // window.location.href = `/stream/${streamCode}`;
+                console.log(`即将跳转至直播: ${streamCode}`);
+            }, 1500);
+        } else {
+            // 验证失败，显示具体错误消息
+            if (validationResult.errors.length > 0) {
+                // 分别显示每个字段的错误
+                validationResult.errors.forEach((error, index) => {
+                    // 错误消息之间稍微间隔显示，提高用户体验
+                    setTimeout(() => {
+                        toast.error(`${error.field}验证失败`, error.error.replace('Error: ', ''));
+                    }, index * 300); // 每个消息间隔300毫秒
+                });
+            } else {
+                // 如果没有具体错误（不应该发生），显示通用错误消息
+                toast.error('验证失败', '请检查所有输入字段是否正确');
+            }
         }
     });
     
@@ -314,11 +398,63 @@ document.addEventListener('DOMContentLoaded', function() {
     // 创建防抖动的URL更新函数
     const debouncedUpdateURL = debounceUpdateURL(updateURLParams, 500);
     
+    // 为实时验证设置防抖函数
+    function debounceValidation(fn, delay) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn(...args), delay);
+        };
+    }
+    
+    // 防抖后的验证函数，以减少对用户体验的影响
+    const debouncedValidate = debounceValidation((input, validator) => {
+        const value = input.value.trim();
+        if (!value) return; // 不验证空值
+        
+        const result = validator(value);
+        const fieldName = getFieldDisplayName(input);
+        
+        if (result === true) {
+            // 验证成功时不总是显示toast，只在一些关键字段上显示
+            if (input === streamCodeInput) {
+                toast.success(`${fieldName}格式正确`, '格式有效', { duration: 1500 });
+            }
+        } else {
+            // 验证失败时显示友好的错误提示
+            const errorMsg = result.replace('Error: ', '');
+            toast.warning(`${fieldName}格式有误`, errorMsg, { duration: 2000 });
+        }
+    }, 800); // 800ms的防抖延迟
+    
     // 输入框内容变化时移除错误提示并更新URL
     [streamCodeInput, streamIpInput, streamPortInput, streamSchemaInput, streamVhostInput].forEach(input => {
         input.addEventListener('input', function() {
             removeError(this);
             debouncedUpdateURL();
+            
+            // 实时验证 - 但使用防抖以避免频繁触发
+            if (this.value.trim().length > 0) {
+                // 根据不同字段使用不同的验证器
+                let validator;
+                switch(this.id) {
+                    case 'stream-code':
+                        validator = validators.streamCode;
+                        break;
+                    case 'stream-ip':
+                        validator = validators.serverLocation;
+                        break;
+                    case 'stream-port':
+                        validator = validators.portNumber;
+                        break;
+                    case 'stream-schema':
+                        validator = validators.schema;
+                        break;
+                    case 'stream-vhost':
+                        validator = validators.vhost;
+                        break;
+                }
+            }
         });
     });
     

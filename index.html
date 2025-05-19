@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="styles/filters.css">
     <link rel="stylesheet" href="styles/sort-button.css">
     <link rel="stylesheet" href="styles/popup.css">
+    <link rel="stylesheet" href="styles/toast.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="icon" type="image/svg+xml" href="./assets/images/signal-stream.svg">
@@ -21,7 +22,7 @@
     <script src="./scripts/stream-utils.js"></script>
     <script src="./scripts/popup.js"></script>
     <script src="./scripts/form-validation.js"></script>
-    <!-- <script src="./scripts/demo.js"></script> -->
+    <script src="./scripts/toast.js"></script>
     <script>
         // 页面加载完成后动态添加示例直播
         document.addEventListener('DOMContentLoaded', function() {
@@ -149,6 +150,18 @@
                         </svg>
                         START A NEW STREAM
                     </button>
+                    
+                    <!-- 
+                    <div class="toast-test-buttons">
+                        <div class="divider"><span>测试Toast消息</span></div>
+                        <div class="toast-buttons">
+                            <button class="toast-test-btn success" onclick="toast.success('操作成功', '您的操作已成功完成！')">成功消息</button>
+                            <button class="toast-test-btn error" onclick="toast.error('操作失败', '系统遇到错误，请稍后重试')">错误消息</button>
+                            <button class="toast-test-btn warning" onclick="toast.warning('注意', '此操作不可撤销，请谨慎操作')">警告消息</button>
+                            <button class="toast-test-btn info" onclick="toast.info('系统通知', '新的直播已添加到列表')">信息消息</button>
+                            <button class="toast-test-btn default" onclick="toast.default('提示', '点击此消息可将其关闭')">默认消息</button>
+                        </div>
+                    </div> -->
                 </div>
 
                 <!-- Right SVG Animation Area -->

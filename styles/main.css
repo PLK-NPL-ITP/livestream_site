@@ -498,6 +498,65 @@ h1 {
     stroke: var(--primary-color);
 }
 
+/* Toast Test Buttons */
+.toast-test-buttons {
+    margin-top: 1.5rem;
+    width: 100%;
+}
+
+.toast-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.toast-test-btn {
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.85rem;
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.toast-test-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.toast-test-btn.success {
+    background-color: white;
+    color: var(--secondary-color);
+    border: 1px solid var(--secondary-color);
+}
+
+.toast-test-btn.error {
+    background-color: white;
+    color: var(--danger-color);
+    border: 1px solid var(--danger-color);
+}
+
+.toast-test-btn.warning {
+    background-color: white;
+    color: var(--warning-color);
+    border: 1px solid var(--warning-color);
+}
+
+.toast-test-btn.info {
+    background-color: white;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.toast-test-btn.default {
+    background-color: white;
+    color: var(--dark-color);
+    border: 1px solid var(--gray-color);
+}
+
 /* Stream List Card Styles */
 .view-options {
     display: flex;
