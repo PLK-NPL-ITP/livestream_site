@@ -1,0 +1,73 @@
+.stream-list.list-view .stream-info {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.stream-list.list-view .stream-info-left {
+    flex: 0 0 40%;
+    padding-right: 20px;
+}
+
+.stream-list.list-view .stream-description {
+    flex: 0 0 55%;
+    margin-top: 0;
+    border-left: 1px solid var(--light-gray);
+    padding-left: 20px;
+    position: relative;
+    align-self: center;
+    min-height: 60px;
+}
+
+/* 描述内容容器样式 */
+.stream-list.list-view .display-description {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 改进边框样式，确保分隔线高度适中 */
+.stream-list.list-view .stream-description::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 1px;
+    background-color: var(--light-gray);
+}
+
+/* 确保在小屏幕上的响应式布局 */
+@media (max-width: 768px) {
+    .stream-list.list-view .stream-info {
+        flex-direction: column;
+    }
+    
+    .stream-list.list-view .stream-info-left,
+    .stream-list.list-view .stream-description {
+        flex: 0 0 100%;
+        padding: 10px 0;
+    }
+    
+    .stream-list.list-view .stream-description {
+        border-left: none;
+        border-top: 1px solid var(--light-gray);
+        margin-top: 10px;
+        padding-left: 0;
+        /* 在移动端增加描述区域的最小高度，确保可读性 */
+        min-height: var(--desc-min-height-mobile, 80px);
+    }
+    
+    .stream-list.list-view .stream-description::before {
+        display: none;
+    }
+    
+    /* 移动设备上的标签和可见性优化 */
+    .tags-view .stream-tag,
+    .tags-view .stream-visibility {
+        margin-bottom: 6px;
+        font-size: 0.65rem;
+    }
+}

@@ -6,11 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Intranet Livestream Portal</title>
     <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/description.css">
+    <link rel="stylesheet" href="styles/layout.css">
+    <link rel="stylesheet" href="styles/filters.css">
+    <link rel="stylesheet" href="styles/sort-button.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="icon" type="image/svg+xml" href="./assets/images/signal-stream.svg">
     <script src="./scripts/chart.js"></script>
     <script src="./scripts/main.js"></script>
+    <script src="./scripts/view-switcher.js"></script>
+    <script src="./scripts/filters.js"></script>
+    <script src="./scripts/stream-utils.js"></script>
+    <!-- <script src="./scripts/demo.js"></script> -->
+    <script>
+        // 页面加载完成后动态添加示例直播
+        document.addEventListener('DOMContentLoaded', function() {
+            // 等待所有脚本都加载完毕后执行
+            setTimeout(function() {
+                // 使用我们新的函数添加例子
+                window.addExampleStreamItems();
+            }, 100);
+        });
+    </script>
 </head>
 
 <body>
@@ -100,78 +118,61 @@
             <div class="scroller-card" id="card-streams">
                 <div class="card-container streams">
                 <div class="streams-header">
-                    <h2>Available Streams</h2>
-                    <!-- <div class="stream-filter">
-                        <select title="Filter streams" id="stream-filter">
-                            <option>All Streams</option>
-                            <option>Public Only</option>
-                            <option>Private</option>
-                        </select>
-                    </div> -->
+                    <div class="streams-header-left">
+                        <h2>Available Streams</h2>
+                    </div>
+                    <div class="view-options">
+                        <div class="stream-filters">
+                            <div class="visibility-filter">
+                                <div class="visibility-dropdown">
+                                    <button id="visibility-dropdown-btn" aria-haspopup="true" aria-expanded="false">
+                                        <img src="./assets/images/visibility.svg" alt="Visibility Filter" class="svg-icon">
+                                        可见性筛选
+                                    </button>
+                                    <div class="visibility-dropdown-content" id="visibility-dropdown-content" role="menu">
+                                        <div class="visibility-option" role="menuitem" data-value="all">
+                                            <span class="visibility-checkbox checked" id="visibility-all"></span>
+                                            <span class="visibility-label">所有直播</span>
+                                        </div>
+                                        <div class="visibility-option" role="menuitem" data-value="public">
+                                            <span class="visibility-checkbox" id="visibility-public"></span>
+                                            <span class="visibility-label">公开直播</span>
+                                        </div>
+                                        <div class="visibility-option" role="menuitem" data-value="private">
+                                            <span class="visibility-checkbox" id="visibility-private"></span>
+                                            <span class="visibility-label">私人直播</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tags-filter">
+                                <div class="tags-dropdown">
+                                    <button id="tags-dropdown-btn" aria-haspopup="true" aria-expanded="false">
+                                        <img src="./assets/images/tags.svg" alt="Tags Filter" class="svg-icon">
+                                        标签筛选
+                                    </button>
+                                    <div class="tags-dropdown-content" id="tags-dropdown-content" role="menu">
+                                        <!-- 标签选项将在这里动态生成 -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="grid-view-btn" class="view-btn active" title="网格视图">
+                            <img src="./assets/images/grid-view.svg" alt="Grid View" class="view-icon">
+                        </button>
+                        <button id="list-view-btn" class="view-btn" title="列表视图">
+                            <img src="./assets/images/list-view.svg" alt="List View" class="view-icon">
+                        </button>
+                        <button id="tags-view-btn" class="view-btn" title="标签视图">
+                            <img src="./assets/images/tags.svg" alt="Tags View" class="view-icon">
+                        </button>
+                        <button id="sort-streams-btn" class="view-btn" title="排序">
+                            <img src="./assets/images/arrow-down-1-9.svg" alt="Sort" id="sort-icon" class="sort-icon">
+                        </button>
+                    </div>
                 </div>
                 <div class="stream-list" id="public-streams">
-                    <!-- Stream items will be populated by JS -->
-                    <div class="stream-item">
-                        <div class="stream-thumbnail">
-                            <img src="assets/images/stream1.jpg" alt="Stream thumbnail">
-                            <span class="live-badge">LIVE</span>
-                            <span class="quality-info">1080p • 30fps</span>
-                        </div>
-                        <div class="stream-info">
-                            <h3>Weekly Team Meeting</h3>
-                            <p class="stream-author">Jane Doe</p>
-                            <p class="stream-meta">Started 2 hours ago • 45 viewers</p>
-                        </div>
-                    </div>
-                    <div class="stream-item">
-                        <div class="stream-thumbnail">
-                            <img src="assets/images/stream1.jpg" alt="Stream thumbnail">
-                            <span class="live-badge">LIVE</span>
-                            <span class="quality-info">1080p • 30fps</span>
-                        </div>
-                        <div class="stream-info">
-                            <h3>Weekly Team Meeting</h3>
-                            <p class="stream-author">Jane Doe</p>
-                            <p class="stream-meta">Started 2 hours ago • 45 viewers</p>
-                        </div>
-                    </div>
-                    <div class="stream-item">
-                        <div class="stream-thumbnail">
-                            <img src="assets/images/stream1.jpg" alt="Stream thumbnail">
-                            <span class="live-badge">LIVE</span>
-                            <span class="quality-info">1080p • 30fps</span>
-                        </div>
-                        <div class="stream-info">
-                            <h3>Weekly Team Meeting</h3>
-                            <p class="stream-author">Jane Doe</p>
-                            <p class="stream-meta">Started 2 hours ago • 45 viewers</p>
-                        </div>
-                    </div>
-                    <div class="stream-item">
-                        <div class="stream-thumbnail">
-                            <img src="assets/images/stream1.jpg" alt="Stream thumbnail">
-                            <span class="live-badge">LIVE</span>
-                            <span class="quality-info">1080p • 30fps</span>
-                        </div>
-                        <div class="stream-info">
-                            <h3>Weekly Team Meeting</h3>
-                            <p class="stream-author">Jane Doe</p>
-                            <p class="stream-meta">Started 2 hours ago • 45 viewers</p>
-                        </div>
-                    </div>
-                    <div class="stream-item">
-                        <div class="stream-thumbnail">
-                            <img src="assets/images/stream1.jpg" alt="Stream thumbnail">
-                            <span class="live-badge">LIVE</span>
-                            <span class="quality-info">1080p • 30fps</span>
-                        </div>
-                        <div class="stream-info">
-                            <h3>Weekly Team Meeting</h3>
-                            <p class="stream-author">Jane Doe</p>
-                            <p class="stream-meta">Started 2 hours ago • 45 viewers</p>
-                        </div>
-                    </div>
-                    <!-- More stream items... -->
+                    <!-- Stream items will be dynamically generated by JavaScript -->
                 </div>
                 <div class="private-streams-notice" id="private-streams-notice">
                     <p>Log in to view private streams!</p>
