@@ -112,6 +112,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
+    // 从URL参数中读取并填充表单字段
+    function populateFormFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        console.log('URL Parameters:', urlParams.toString());
+
+        // 映射参数名称到对应的输入字段和验证器
+        const paramMap = {
+            'stream-code': { input: streamCodeInput, validator: validators.streamCode },
+            'server': { input: streamIpInput, validator: validators.serverLocation },
+            'port': { input: streamPortInput, validator: validators.portNumber },
+            'schema': { input: streamSchemaInput, validator: validators.schema },
+            'vhost': { input: streamVhostInput, validator: validators.vhost },
+            // 兼容别名
+            'app': { input: streamVhostInput, validator: validators.vhost }
+        };
+        
+        // 遍历参数映射
+        let hasAdvancedParams = false;
+        
+        for (const [param, config] of Object.entries(paramMap)) {
+            if (urlParams.has(param)) {
+                const value = urlParams.get(param);
+                
+                // 验证参数值是否合法
+                if (value && config.validator(value) === true) {
+                    config.input.value = value;
+                    
+                    // 如果是高级设置参数，标记需要显示高级设置
+                    if (param !== 'stream-code') {
+                        hasAdvancedParams = true;
+                    }
+                }
+            }
+        }
+        
+        // 如果有高级参数，显示高级设置面板
+        if (hasAdvancedParams) {
+            const settings = document.getElementById('advanced-settings');
+            const section = document.getElementsByClassName('code-section')[0];
+            const toggle = document.getElementById('advanced-toggle');
+            
+            settings.style.display = 'flex';
+            section.classList.toggle('expand');
+            toggle.textContent = 'Click to hide advanced Connection Settings';
+        }
+    }
+    
+    // 在页面加载时调用，填充表单
+    populateFormFromURL();
+    
     // 显示错误信息的函数
     function showError(input, message) {
         // 获取对应的span标签
@@ -205,6 +255,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 验证表单
         if (validateAllInputs()) {
+            // 确保URL参数已更新
+            updateURLParams();
+            
             // 验证通过，执行加入直播流的操作
             const streamCode = streamCodeInput.value.trim();
             alert(`Success! Joining stream: ${streamCode}`);
@@ -213,10 +266,59 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // 输入框内容变化时移除错误提示
+    // 更新URL参数的函数
+    function updateURLParams() {
+        // 获取所有输入框的值
+        const streamCode = streamCodeInput.value.trim();
+        const server = streamIpInput.value.trim();
+        const port = streamPortInput.value.trim();
+        const schema = streamSchemaInput.value.trim();
+        const vhost = streamVhostInput.value.trim();
+        
+        // 创建URL对象
+        const url = new URL(window.location.href);
+        
+        // 清除旧参数
+        url.searchParams.delete('stream-code');
+        url.searchParams.delete('server');
+        url.searchParams.delete('port');
+        url.searchParams.delete('schema');
+        url.searchParams.delete('vhost');
+        
+        // 添加有效的参数
+        if (streamCode) url.searchParams.set('stream-code', streamCode);
+        if (server) url.searchParams.set('server', server);
+        if (port) url.searchParams.set('port', port);
+        if (schema) url.searchParams.set('schema', schema);
+        if (vhost) url.searchParams.set('vhost', vhost);
+        
+        // 保留card参数
+        const cardParam = new URLSearchParams(window.location.search).get('card');
+        if (cardParam !== null && /^[0-3]$/.test(cardParam)) {
+            url.searchParams.set('card', cardParam);
+        }
+        
+        // 更新URL，不刷新页面
+        window.history.replaceState({}, '', url);
+    }
+    
+    // 延迟更新URL的函数，防止频繁更新
+    function debounceUpdateURL(callback, delay) {
+        let timeout;
+        return function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(callback, delay);
+        };
+    }
+    
+    // 创建防抖动的URL更新函数
+    const debouncedUpdateURL = debounceUpdateURL(updateURLParams, 500);
+    
+    // 输入框内容变化时移除错误提示并更新URL
     [streamCodeInput, streamIpInput, streamPortInput, streamSchemaInput, streamVhostInput].forEach(input => {
         input.addEventListener('input', function() {
             removeError(this);
+            debouncedUpdateURL();
         });
     });
     
@@ -226,6 +328,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') {
             // 阻止默认行为
             e.preventDefault();
+            
+            // 立即更新URL
+            updateURLParams();
             
             // 如果高级选项未展开，则模拟点击Enter按钮
             if (advancedSettings.style.display !== 'flex') {

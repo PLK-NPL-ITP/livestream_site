@@ -633,6 +633,11 @@ document.addEventListener('DOMContentLoaded', function () {
         updateActiveCard();
         updateActiveNav();
         updateActiveIndicator();
+        
+        // 更新URL参数，不刷新页面
+        const url = new URL(window.location.href);
+        url.searchParams.set('card', index.toString());
+        window.history.replaceState({}, '', url);
 
         // Scroll to the card
         cards[index].scrollIntoView({
@@ -791,9 +796,27 @@ document.addEventListener('DOMContentLoaded', function () {
             goToCard(currentIndex - 1);
         }
     }
+    
+    // 从URL参数中获取card参数，切换到指定卡片
+    function getInitialCardFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const cardParam = urlParams.get('card');
+        
+        // 检查card参数是否存在且为0-3之间的数字
+        if (cardParam !== null && /^[0-3]$/.test(cardParam)) {
+            const cardIndex = parseInt(cardParam, 10);
+            return cardIndex;
+        }
+        
+        // 默认返回0
+        return 0;
+    }
 
-    // Initialize the first card as active
-    goToCard(0);
+    // 初始化时获取并切换到指定卡片
+    const initialCard = getInitialCardFromURL();
+    
+    // 根据URL参数初始化卡片
+    goToCard(initialCard);
 
     // Handle window resize
     window.addEventListener('resize', () => {
