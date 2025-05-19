@@ -184,14 +184,24 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!streamId) return;
         
         console.log(`Opening stream with ID: ${streamId}`);
-        // 这里可以添加实际打开直播的逻辑
-        // 例如跳转到直播页面:
-        // window.location.href = `./stream-viewer.html?id=${streamId}`;
         
-        // 临时提示 - 可以根据实际需求修改
-        alert(`即将观看直播: ${streamId}\n此功能尚在开发中`);
+        // 获取直播标题（如果可用）
+        let streamTitle = '直播';
+        if (currentStreamElement) {
+            streamTitle = currentStreamElement.querySelector('h3')?.textContent || '直播';
+        }
+        
+        // 显示成功toast消息
+        toast.success('正在连接', `即将观看: ${streamTitle}`);
         
         // 关闭弹窗
         hidePopup();
+        
+        // 使用延迟处理实际跳转，让用户能看到toast消息
+        setTimeout(() => {
+            // 实际实现会跳转到直播观看页面
+            // window.location.href = `./stream-viewer.html?id=${streamId}`;
+            console.log(`即将跳转到直播观看页面，直播ID: ${streamId}`);
+        }, 1500);
     }
 });
