@@ -275,6 +275,11 @@ document.addEventListener('DOMContentLoaded', function () {
             window.applyFilters();
         }
         
+        // 应用当前的排序（如果已设置了排序方式）
+        if (typeof window.applySorting === 'function') {
+            window.applySorting();
+        }
+        
         return newStreamItem;
     };
     

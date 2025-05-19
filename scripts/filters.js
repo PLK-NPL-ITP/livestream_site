@@ -1,13 +1,16 @@
 document.addEventListener('DOMContentLoaded', function () {
     // 获取DOM元素
     const publicStreams = document.getElementById('public-streams');
-    const visibilityFilter = document.getElementById('visibility-filter');
+    const visibilityDropdownBtn = document.getElementById('visibility-dropdown-btn');
+    const visibilityDropdownContent = document.getElementById('visibility-dropdown-content');
+    const visibilityOptions = document.querySelectorAll('.visibility-option');
     const tagsDropdownBtn = document.getElementById('tags-dropdown-btn');
     const tagsDropdownContent = document.getElementById('tags-dropdown-content');
     
-    // 存储所有直播项和已筛选的标签
+    // 存储所有直播项、已筛选的标签和当前可见性选项
     let allStreamItems = [];
     let selectedTags = [];
+    let currentVisibility = 'all'; // 默认显示所有直播
     
     // 初始化
     initializeFilters();
@@ -120,7 +123,8 @@ document.addEventListener('DOMContentLoaded', function () {
         // 刷新直播项列表，确保包含新添加的项目
         refreshStreamItems();
         
-        const visibility = visibilityFilter.value;
+        // 使用currentVisibility变量而不是visibilityFilter.value
+        const visibility = currentVisibility;
         
         allStreamItems.forEach(item => {
             const itemVisibility = item.getAttribute('data-visibility');
@@ -148,8 +152,27 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // 设置事件监听器
     function setupEventListeners() {
-        // 可见性筛选器变化
-        visibilityFilter.addEventListener('change', applyFilters);
+        // 可见性选项点击事件
+        visibilityOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // 更新选中状态
+                const value = this.getAttribute('data-value');
+                selectVisibilityOption(value);
+                
+                // 应用筛选
+                applyFilters();
+                
+                // 关闭下拉菜单
+                visibilityDropdownContent.classList.remove('show');
+                visibilityDropdownBtn.setAttribute('aria-expanded', 'false');
+            });
+        });
+        
+        // 可见性下拉菜单点击切换
+        visibilityDropdownBtn.addEventListener('click', function() {
+            visibilityDropdownContent.classList.toggle('show');
+            this.setAttribute('aria-expanded', visibilityDropdownContent.classList.contains('show'));
+        });
         
         // 标签下拉菜单点击切换
         tagsDropdownBtn.addEventListener('click', function() {
@@ -159,11 +182,54 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // 点击页面其他地方关闭下拉菜单
         document.addEventListener('click', function(event) {
+            // 关闭标签下拉菜单
             if (!event.target.closest('.tags-dropdown') && tagsDropdownContent.classList.contains('show')) {
                 tagsDropdownContent.classList.remove('show');
                 tagsDropdownBtn.setAttribute('aria-expanded', 'false');
             }
+            
+            // 关闭可见性下拉菜单
+            if (!event.target.closest('.visibility-dropdown') && visibilityDropdownContent.classList.contains('show')) {
+                visibilityDropdownContent.classList.remove('show');
+                visibilityDropdownBtn.setAttribute('aria-expanded', 'false');
+            }
         });
+    }
+    
+    // 选择可见性选项
+    function selectVisibilityOption(value) {
+        // 更新当前选中的可见性
+        currentVisibility = value;
+        
+        // 更新所有选项的选中状态
+        visibilityOptions.forEach(option => {
+            const optionValue = option.getAttribute('data-value');
+            const checkbox = option.querySelector('.visibility-checkbox');
+            
+            if (optionValue === value) {
+                checkbox.classList.add('checked');
+            } else {
+                checkbox.classList.remove('checked');
+            }
+        });
+        
+        // 更新下拉按钮文本
+        updateVisibilityButton(value);
+    }
+    
+    // 更新可见性下拉按钮文本
+    function updateVisibilityButton(value) {
+        let text = '所有直播';
+        if (value === 'public') {
+            text = '公开直播';
+        } else if (value === 'private') {
+            text = '私人直播';
+        }
+        
+        visibilityDropdownBtn.innerHTML = `
+            <img src="./assets/images/visibility.svg" alt="Visibility Filter" class="svg-icon">
+            ${text}
+        `;
     }
     
     // 公开用于其他脚本的函数
