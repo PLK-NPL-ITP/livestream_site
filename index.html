@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="styles/layout.css">
     <link rel="stylesheet" href="styles/filters.css">
     <link rel="stylesheet" href="styles/sort-button.css">
+    <link rel="stylesheet" href="styles/popup.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="icon" type="image/svg+xml" href="./assets/images/signal-stream.svg">
@@ -18,6 +19,7 @@
     <script src="./scripts/view-switcher.js"></script>
     <script src="./scripts/filters.js"></script>
     <script src="./scripts/stream-utils.js"></script>
+    <script src="./scripts/popup.js"></script>
     <!-- <script src="./scripts/demo.js"></script> -->
     <script>
         // 页面加载完成后动态添加示例直播
@@ -32,6 +34,47 @@
 </head>
 
 <body>
+    <!-- Stream Details Popup -->
+    <div class="stream-details-popup" id="stream-details-popup">
+        <div class="popup-content">
+            <button class="close-popup" id="close-popup" title="关闭">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </button>
+            <div class="popup-header">
+                <div class="popup-thumbnail">
+                    <img src="" alt="Stream thumbnail" id="popup-thumbnail">
+                    <span class="live-badge">LIVE</span>
+                    <span class="quality-info" id="popup-quality"></span>
+                </div>
+                <div class="popup-info">
+                    <h2 id="popup-title"></h2>
+                    <p class="popup-author" id="popup-author"></p>
+                    <p class="popup-meta" id="popup-meta"></p>
+                    <div class="popup-badges">
+                        <span class="stream-visibility" id="popup-visibility"></span>
+                        <div class="popup-tags" id="popup-tags"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="popup-body">
+                <h3>Description</h3>
+                <p class="popup-description" id="popup-description"></p>
+            </div>
+            <div class="popup-footer">
+                <button class="btn-view-stream" id="btn-view-stream">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 12L19 12M19 12L12 5M19 12L12 19" stroke="#ff4757" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    VIEW STREAM
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <div class="app-container">
         <!-- Navigation Bar -->
         <nav class="navbar">
@@ -181,6 +224,8 @@
                     <span>↓ Scroll for more</span>
                 </div> -->
                 </div>
+                
+
             </div>
 
             <!-- Console Card (changes based on auth) -->

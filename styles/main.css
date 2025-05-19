@@ -708,6 +708,7 @@ h1 {
     overflow: hidden;
     box-shadow: var(--card-shadow);
     transition: var(--transition);
+    cursor: pointer;
 }
 
 .stream-item:hover {
