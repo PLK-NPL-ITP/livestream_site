@@ -20,6 +20,7 @@
     <script src="./scripts/filters.js"></script>
     <script src="./scripts/stream-utils.js"></script>
     <script src="./scripts/popup.js"></script>
+    <script src="./scripts/form-validation.js"></script>
     <!-- <script src="./scripts/demo.js"></script> -->
     <script>
         // 页面加载完成后动态添加示例直播
@@ -37,7 +38,7 @@
     <!-- Stream Details Popup -->
     <div class="stream-details-popup" id="stream-details-popup">
         <div class="popup-content">
-            <button class="close-popup" id="close-popup" title="关闭">
+            <button class="close-popup" id="close-popup" title="Close">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round" />
@@ -170,20 +171,20 @@
                                 <div class="visibility-dropdown">
                                     <button id="visibility-dropdown-btn" aria-haspopup="true" aria-expanded="false">
                                         <img src="./assets/images/visibility.svg" alt="Visibility Filter" class="svg-icon">
-                                        可见性筛选
+                                        Visibility Filter
                                     </button>
                                     <div class="visibility-dropdown-content" id="visibility-dropdown-content" role="menu">
                                         <div class="visibility-option" role="menuitem" data-value="all">
                                             <span class="visibility-checkbox checked" id="visibility-all"></span>
-                                            <span class="visibility-label">所有直播</span>
+                                            <span class="visibility-label">All Streams</span>
                                         </div>
                                         <div class="visibility-option" role="menuitem" data-value="public">
                                             <span class="visibility-checkbox" id="visibility-public"></span>
-                                            <span class="visibility-label">公开直播</span>
+                                            <span class="visibility-label">Public Streams</span>
                                         </div>
                                         <div class="visibility-option" role="menuitem" data-value="private">
                                             <span class="visibility-checkbox" id="visibility-private"></span>
-                                            <span class="visibility-label">私人直播</span>
+                                            <span class="visibility-label">Private Streams</span>
                                         </div>
                                     </div>
                                 </div>
@@ -192,24 +193,24 @@
                                 <div class="tags-dropdown">
                                     <button id="tags-dropdown-btn" aria-haspopup="true" aria-expanded="false">
                                         <img src="./assets/images/tags.svg" alt="Tags Filter" class="svg-icon">
-                                        标签筛选
+                                        Tags Filter
                                     </button>
                                     <div class="tags-dropdown-content" id="tags-dropdown-content" role="menu">
-                                        <!-- 标签选项将在这里动态生成 -->
+                                        <!-- Tags options will be dynamically generated here -->
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <button id="grid-view-btn" class="view-btn active" title="网格视图">
+                        <button id="grid-view-btn" class="view-btn active" title="Grid View">
                             <img src="./assets/images/grid-view.svg" alt="Grid View" class="view-icon">
                         </button>
-                        <button id="list-view-btn" class="view-btn" title="列表视图">
+                        <button id="list-view-btn" class="view-btn" title="List View">
                             <img src="./assets/images/list-view.svg" alt="List View" class="view-icon">
                         </button>
-                        <button id="tags-view-btn" class="view-btn" title="标签视图">
+                        <button id="tags-view-btn" class="view-btn" title="Tags View">
                             <img src="./assets/images/tags.svg" alt="Tags View" class="view-icon">
                         </button>
-                        <button id="sort-streams-btn" class="view-btn" title="排序">
+                        <button id="sort-streams-btn" class="view-btn" title="Sort">
                             <img src="./assets/images/arrow-down-1-9.svg" alt="Sort" id="sort-icon" class="sort-icon">
                         </button>
                     </div>
