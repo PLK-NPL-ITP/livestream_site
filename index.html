@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="styles/layout.css">
     <link rel="stylesheet" href="styles/filters.css">
     <link rel="stylesheet" href="styles/sort-button.css">
+    <link rel="stylesheet" href="styles/popup.css">
+    <link rel="stylesheet" href="styles/toast.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="icon" type="image/svg+xml" href="./assets/images/signal-stream.svg">
@@ -18,7 +20,9 @@
     <script src="./scripts/view-switcher.js"></script>
     <script src="./scripts/filters.js"></script>
     <script src="./scripts/stream-utils.js"></script>
-    <!-- <script src="./scripts/demo.js"></script> -->
+    <script src="./scripts/popup.js"></script>
+    <script src="./scripts/form-validation.js"></script>
+    <script src="./scripts/toast.js"></script>
     <script>
         // 页面加载完成后动态添加示例直播
         document.addEventListener('DOMContentLoaded', function() {
@@ -32,6 +36,47 @@
 </head>
 
 <body>
+    <!-- Stream Details Popup -->
+    <div class="stream-details-popup" id="stream-details-popup">
+        <div class="popup-content">
+            <button class="close-popup" id="close-popup" title="Close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </button>
+            <div class="popup-header">
+                <div class="popup-thumbnail">
+                    <img src="" alt="Stream thumbnail" id="popup-thumbnail">
+                    <span class="live-badge">LIVE</span>
+                    <span class="quality-info" id="popup-quality"></span>
+                </div>
+                <div class="popup-info">
+                    <h2 id="popup-title"></h2>
+                    <p class="popup-author" id="popup-author"></p>
+                    <p class="popup-meta" id="popup-meta"></p>
+                    <div class="popup-badges">
+                        <span class="stream-visibility" id="popup-visibility"></span>
+                        <div class="popup-tags" id="popup-tags"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="popup-body">
+                <h3>Description</h3>
+                <p class="popup-description" id="popup-description"></p>
+            </div>
+            <div class="popup-footer">
+                <button class="btn-view-stream" id="btn-view-stream">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 12L19 12M19 12L12 5M19 12L12 19" stroke="#ff4757" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    VIEW STREAM
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <div class="app-container">
         <!-- Navigation Bar -->
         <nav class="navbar">
@@ -105,6 +150,18 @@
                         </svg>
                         START A NEW STREAM
                     </button>
+                    
+                    <!-- 
+                    <div class="toast-test-buttons">
+                        <div class="divider"><span>测试Toast消息</span></div>
+                        <div class="toast-buttons">
+                            <button class="toast-test-btn success" onclick="toast.success('操作成功', '您的操作已成功完成！')">成功消息</button>
+                            <button class="toast-test-btn error" onclick="toast.error('操作失败', '系统遇到错误，请稍后重试')">错误消息</button>
+                            <button class="toast-test-btn warning" onclick="toast.warning('注意', '此操作不可撤销，请谨慎操作')">警告消息</button>
+                            <button class="toast-test-btn info" onclick="toast.info('系统通知', '新的直播已添加到列表')">信息消息</button>
+                            <button class="toast-test-btn default" onclick="toast.default('提示', '点击此消息可将其关闭')">默认消息</button>
+                        </div>
+                    </div> -->
                 </div>
 
                 <!-- Right SVG Animation Area -->
@@ -127,20 +184,20 @@
                                 <div class="visibility-dropdown">
                                     <button id="visibility-dropdown-btn" aria-haspopup="true" aria-expanded="false">
                                         <img src="./assets/images/visibility.svg" alt="Visibility Filter" class="svg-icon">
-                                        可见性筛选
+                                        Visibility Filter
                                     </button>
                                     <div class="visibility-dropdown-content" id="visibility-dropdown-content" role="menu">
                                         <div class="visibility-option" role="menuitem" data-value="all">
                                             <span class="visibility-checkbox checked" id="visibility-all"></span>
-                                            <span class="visibility-label">所有直播</span>
+                                            <span class="visibility-label">All Streams</span>
                                         </div>
                                         <div class="visibility-option" role="menuitem" data-value="public">
                                             <span class="visibility-checkbox" id="visibility-public"></span>
-                                            <span class="visibility-label">公开直播</span>
+                                            <span class="visibility-label">Public Streams</span>
                                         </div>
                                         <div class="visibility-option" role="menuitem" data-value="private">
                                             <span class="visibility-checkbox" id="visibility-private"></span>
-                                            <span class="visibility-label">私人直播</span>
+                                            <span class="visibility-label">Private Streams</span>
                                         </div>
                                     </div>
                                 </div>
@@ -149,24 +206,24 @@
                                 <div class="tags-dropdown">
                                     <button id="tags-dropdown-btn" aria-haspopup="true" aria-expanded="false">
                                         <img src="./assets/images/tags.svg" alt="Tags Filter" class="svg-icon">
-                                        标签筛选
+                                        Tags Filter
                                     </button>
                                     <div class="tags-dropdown-content" id="tags-dropdown-content" role="menu">
-                                        <!-- 标签选项将在这里动态生成 -->
+                                        <!-- Tags options will be dynamically generated here -->
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <button id="grid-view-btn" class="view-btn active" title="网格视图">
+                        <button id="grid-view-btn" class="view-btn active" title="Grid View">
                             <img src="./assets/images/grid-view.svg" alt="Grid View" class="view-icon">
                         </button>
-                        <button id="list-view-btn" class="view-btn" title="列表视图">
+                        <button id="list-view-btn" class="view-btn" title="List View">
                             <img src="./assets/images/list-view.svg" alt="List View" class="view-icon">
                         </button>
-                        <button id="tags-view-btn" class="view-btn" title="标签视图">
+                        <button id="tags-view-btn" class="view-btn" title="Tags View">
                             <img src="./assets/images/tags.svg" alt="Tags View" class="view-icon">
                         </button>
-                        <button id="sort-streams-btn" class="view-btn" title="排序">
+                        <button id="sort-streams-btn" class="view-btn" title="Sort">
                             <img src="./assets/images/arrow-down-1-9.svg" alt="Sort" id="sort-icon" class="sort-icon">
                         </button>
                     </div>
@@ -181,6 +238,8 @@
                     <span>↓ Scroll for more</span>
                 </div> -->
                 </div>
+                
+
             </div>
 
             <!-- Console Card (changes based on auth) -->
