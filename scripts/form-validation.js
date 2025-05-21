@@ -1,9 +1,36 @@
 /**
- * 表单验证功能
- * 处理直播码和高级连接设置的验证
+ * Form Validation System
+ * 
+ * Author: Jason Yang Jiepeng, NPL ITP Infrastructure (Development) Group
+ * Date: 2024-05-21
+ * Copyright (c) 2025 NPL ITP Infrastructure (Development) Group
+ * All rights reserved.
+ * Distributed under the MIT License.
+ * 
+ * This module handles form validation and user interaction for livestream connection settings.
+ * Works with validators.js and url-params.js to manage validation rules and URL parameters.
+ * 
+ * Implementation Methods:
+ * - Uses DOM event listeners for user interaction
+ * - Implements custom CSS animations for validation feedback
+ * - Utilizes validator functions from external module
+ * - Maintains URL parameters synchronization with form state
+ * - Displays toast notifications for validation results
+ * 
+ * Features:
+ * - Real-time validation with visual feedback
+ * - Form submission handling
+ * - Error animations and notifications
+ * - Advanced settings toggle
+ * - URL parameter management
  */
+
+// Load dependencies
 document.addEventListener('DOMContentLoaded', function() {
-    // 获取DOM元素
+    /**
+     * SECTION: Initialization and DOM Setup
+     */
+    // Get DOM elements
     const streamCodeInput = document.getElementById('stream-code');
     const streamIpInput = document.getElementById('stream-ip');
     const streamPortInput = document.getElementById('stream-port');
@@ -11,11 +38,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const streamVhostInput = document.getElementById('stream-vhost');
     const enterButton = document.querySelector('.btn-enter');
     const advancedSettings = document.getElementById('advanced-settings');
+    const advancedToggle = document.getElementById('advanced-toggle');
     
-    // 存储原始的标签内容，用于恢复
+    // Store original label content for restoration
     const originalLabels = new Map();
     
-    // 定义CSS样式用于错误抖动动画和错误消失动画
+    // Add CSS styles for error animations
     const customAnimationStyle = document.createElement('style');
     customAnimationStyle.textContent = `
         @keyframes inputShake {
@@ -43,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(customAnimationStyle);
     
-    // 初始化时保存所有标签的原始内容
+    // Save original label content
     function saveOriginalLabels() {
         document.querySelectorAll('.input-box').forEach(box => {
             const input = box.querySelector('input');
@@ -54,130 +82,81 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 页面加载时保存原始标签
+    // Initialize on page load
     saveOriginalLabels();
     
-    // 定义验证规则
-    const validators = {
-        // Stream-code只包含小写字母和数字和中间一个横杠，符合格式"xxx-xxxx"
-        streamCode: function(value) {
-            const regex = /^[a-z0-9]{3}-[a-z0-9]{4}$/;
-            return regex.test(value) ? true : "Error: Format should be xxx-xxxx (lowercase letters or numbers)";
+    /**
+     * SECTION: Setup Input-Validator Mapping and URL Params
+     */
+    // Create mapping between URL parameters and input fields
+    const inputMap = {
+        'stream-code': { 
+            element: streamCodeInput, 
+            validator: validators.streamCode,
+            isAdvanced: false
         },
-        
-        // server network location：支持域名、IPv4和IPv6
-        serverLocation: function(value) {
-            // 域名格式
-            const domainRegex = /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/;
-            
-            // IPv4格式
-            const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
-            
-            // IPv6格式 (简化版，支持常见IPv6格式)
-            const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9]))$/;
-            
-            if (domainRegex.test(value)) return true;
-            
-            if (ipv4Regex.test(value)) {
-                // 验证IPv4地址范围
-                const parts = value.split('.');
-                for (let i = 0; i < 4; i++) {
-                    const part = parseInt(parts[i]);
-                    if (part < 0 || part > 255) return "Error: IPv4 address segments should be between 0-255";
-                }
-                return true;
-            }
-            
-            if (ipv6Regex.test(value)) return true;
-            
-            return "Error: Should be a valid domain, IPv4 or IPv6 address";
+        'server': { 
+            element: streamIpInput, 
+            validator: validators.serverLocation,
+            isAdvanced: true
         },
-        
-        // port number：就是正常的端口判断:1-65535
-        portNumber: function(value) {
-            if (!/^\d+$/.test(value)) return "Error: Port number should be digits only";
-            const port = parseInt(value);
-            return (port >= 1 && port <= 65535) ? true : "Error: Port number range is 1-65535";
+        'port': { 
+            element: streamPortInput, 
+            validator: validators.portNumber,
+            isAdvanced: true
         },
-        
-        // SCHEMA：只接受HTTP和HTTPS
-        schema: function(value) {
-            const upperValue = value.toUpperCase();
-            return (upperValue === 'HTTP' || upperValue === 'HTTPS') ? true : "Error: Only HTTP or HTTPS are allowed";
+        'schema': { 
+            element: streamSchemaInput, 
+            validator: validators.schema,
+            isAdvanced: true
         },
-        
-        // VHOST：任意内容但不能有空格
-        vhost: function(value) {
-            return (/\s/.test(value)) ? "Error: Cannot contain spaces" : true;
+        'vhost': { 
+            element: streamVhostInput, 
+            validator: validators.vhost,
+            isAdvanced: true
+        },
+        // Compatibility alias
+        'app': { 
+            element: streamVhostInput, 
+            validator: validators.vhost,
+            isAdvanced: true
         }
     };
     
-    // 从URL参数中读取并填充表单字段
-    function populateFormFromURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        console.log('URL Parameters:', urlParams.toString());
-
-        // 映射参数名称到对应的输入字段和验证器
-        const paramMap = {
-            'stream-code': { input: streamCodeInput, validator: validators.streamCode },
-            'server': { input: streamIpInput, validator: validators.serverLocation },
-            'port': { input: streamPortInput, validator: validators.portNumber },
-            'schema': { input: streamSchemaInput, validator: validators.schema },
-            'vhost': { input: streamVhostInput, validator: validators.vhost },
-            // 兼容别名
-            'app': { input: streamVhostInput, validator: validators.vhost }
-        };
+    // Populate form from URL parameters
+    const hasAdvancedParams = urlParamsManager.populateFormFromURL(inputMap, validators);
+    
+    // Show advanced settings panel if advanced parameters exist
+    if (hasAdvancedParams) {
+        const section = document.getElementsByClassName('code-section')[0];
         
-        // 遍历参数映射
-        let hasAdvancedParams = false;
-        
-        for (const [param, config] of Object.entries(paramMap)) {
-            if (urlParams.has(param)) {
-                const value = urlParams.get(param);
-                
-                // 验证参数值是否合法
-                if (value && config.validator(value) === true) {
-                    config.input.value = value;
-                    
-                    // 如果是高级设置参数，标记需要显示高级设置
-                    if (param !== 'stream-code') {
-                        hasAdvancedParams = true;
-                    }
-                }
-            }
-        }
-        
-        // 如果有高级参数，显示高级设置面板
-        if (hasAdvancedParams) {
-            const settings = document.getElementById('advanced-settings');
-            const section = document.getElementsByClassName('code-section')[0];
-            const toggle = document.getElementById('advanced-toggle');
-            
-            settings.style.display = 'flex';
-            section.classList.toggle('expand');
-            toggle.textContent = 'Click to hide advanced Connection Settings';
+        advancedSettings.style.display = 'flex';
+        section?.classList.toggle('expand');
+        if (advancedToggle) {
+            advancedToggle.textContent = 'Click to hide advanced Connection Settings';
         }
     }
     
-    // 在页面加载时调用，填充表单
-    populateFormFromURL();
-    
-    // 显示错误信息的函数
+    /**
+     * SECTION: Error Handling and Validation Functions
+     */
+
+    // Function to display error messages
     function showError(input, message) {
-        // 获取对应的span标签
+        // Get the corresponding span tag
         const inputBox = input.closest('.input-box');
         const span = inputBox.querySelector('.code-span');
         
-        // 清除可能已存在的淡出计时器
+        // Clear any existing fade-out timer
         if (span._fadeTimer) {
             clearTimeout(span._fadeTimer);
             delete span._fadeTimer;
         }
         
-        // 为输入框添加错误样式和抖动动画
+        // Add error style and shake animation to input
         input.classList.add('input-error');
         
-        // 移除动画后重新应用（如果用户多次提交错误）
+        // Remove and reapply animation (if user submits multiple errors)
         setTimeout(() => {
             input.classList.remove('input-error');
             setTimeout(() => {
@@ -187,19 +166,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 10);
         }, 500);
         
-        // 修改标签内容为错误信息
+        // Change label content to error message
         span.textContent = message;
         span.style.color = '#ff0000';
         span.classList.add('error');
     }
     
-    // 移除错误信息的函数
+    // Function to remove error messages
     function removeError(input) {
-        // 获取对应的span标签
+        // Get the corresponding span tag
         const inputBox = input.closest('.input-box');
         const span = inputBox.querySelector('.code-span');
         
-        // 重置为原始标签内容
+        // Reset to original label content
         if (span.classList.contains('error')) {
             span.textContent = originalLabels.get(input.id) || '';
             span.style.color = '';
@@ -208,14 +187,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 验证单个输入的函数
+    // Function to validate a single input
     function validateInput(input, validatorFn) {
         const value = input.value.trim();
         
-        // 如果输入为空，显示"请输入内容"提示
+        // If input is empty, show "Field required" message
         if (!value) {
             showError(input, "Error: This field is required");
-            return { isValid: false, error: "此字段不能为空" };
+            return { isValid: false, error: "This field cannot be empty" };
         }
         
         const result = validatorFn(value);
@@ -229,33 +208,36 @@ document.addEventListener('DOMContentLoaded', function() {
         return { isValid: true };
     }
     
-    // 获取输入字段的显示名称
+    // Function to get display name for input fields
     function getFieldDisplayName(input) {
         switch(input.id) {
             case 'stream-code':
-                return '直播码';
+                return 'Stream Code';
             case 'stream-ip':
-                return '服务器地址';
+                return 'Server Address';
             case 'stream-port':
-                return '端口号';
+                return 'Port Number';
             case 'stream-schema':
-                return '协议';
+                return 'Protocol';
             case 'stream-vhost':
                 return 'VHost';
             default:
-                return '输入字段';
+                return 'Input Field';
         }
     }
     
-    // 验证所有输入的函数
+    /**
+     * SECTION: Form Validation
+     */
+    // Function to validate all inputs
     function validateAllInputs() {
-        // 首先检查是否显示高级设置
+        // Check if advanced settings are visible
         const isAdvancedVisible = (advancedSettings.style.display === 'flex');
         
         let isAllValid = true;
         const errors = [];
         
-        // 先验证直播码
+        // Validate stream code
         const streamCodeResult = validateInput(streamCodeInput, validators.streamCode);
         if (!streamCodeResult.isValid) {
             isAllValid = false;
@@ -265,177 +247,125 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // 如果高级设置可见，则验证所有字段
+        // If advanced settings are visible, validate all fields
         if (isAdvancedVisible) {
-            // 验证服务器地址
-            const ipResult = validateInput(streamIpInput, validators.serverLocation);
-            if (!ipResult.isValid) {
-                isAllValid = false;
-                errors.push({
-                    field: getFieldDisplayName(streamIpInput),
-                    error: ipResult.error
-                });
-            }
+            // Define advanced fields to validate
+            const advancedFields = [
+                { input: streamIpInput, validator: validators.serverLocation },
+                { input: streamPortInput, validator: validators.portNumber },
+                { input: streamSchemaInput, validator: validators.schema },
+                { input: streamVhostInput, validator: validators.vhost }
+            ];
             
-            // 验证端口号
-            const portResult = validateInput(streamPortInput, validators.portNumber);
-            if (!portResult.isValid) {
-                isAllValid = false;
-                errors.push({
-                    field: getFieldDisplayName(streamPortInput),
-                    error: portResult.error
-                });
-            }
-            
-            // 验证协议
-            const schemaResult = validateInput(streamSchemaInput, validators.schema);
-            if (!schemaResult.isValid) {
-                isAllValid = false;
-                errors.push({
-                    field: getFieldDisplayName(streamSchemaInput),
-                    error: schemaResult.error
-                });
-            }
-            
-            // 验证VHost
-            const vhostResult = validateInput(streamVhostInput, validators.vhost);
-            if (!vhostResult.isValid) {
-                isAllValid = false;
-                errors.push({
-                    field: getFieldDisplayName(streamVhostInput),
-                    error: vhostResult.error
-                });
-            }
+            // Validate each advanced field
+            advancedFields.forEach(field => {
+                const result = validateInput(field.input, field.validator);
+                if (!result.isValid) {
+                    isAllValid = false;
+                    errors.push({
+                        field: getFieldDisplayName(field.input),
+                        error: result.error
+                    });
+                }
+            });
         }
         
         return { isValid: isAllValid, errors: errors };
     }
     
-    // 为Enter按钮添加点击事件
+    /**
+     * SECTION: Form Submission Handling
+     */
+    // Add click event listener to Enter button
     enterButton.addEventListener('click', function(e) {
-        // 阻止默认行为
+        // Prevent default form submission
         e.preventDefault();
         
-        // 验证表单
+        // Validate form
         const validationResult = validateAllInputs();
         if (validationResult.isValid) {
-            // 确保URL参数已更新
+            // Ensure URL parameters are updated
             updateURLParams();
             
-            // 验证通过，执行加入直播流的操作
+            // Validation passed, proceed with joining livestream
             const streamCode = streamCodeInput.value.trim();
             
-            // 显示成功toast消息
-            toast.success('连接成功', `正在加入直播: ${streamCode}`);
+            // Show success toast message
+            toast.success('Connection Successful', `Joining livestream: ${streamCode}`);
             
-            // 这里可以添加跳转代码 - 延迟一下让用户看到toast消息
+            // Can add redirection code here - delay to let user see toast message
             setTimeout(() => {
                 // window.location.href = `/stream/${streamCode}`;
-                console.log(`即将跳转至直播: ${streamCode}`);
+                console.log(`Redirecting to livestream: ${streamCode}`);
             }, 1500);
         } else {
-            // 验证失败，显示具体错误消息
+            // Validation failed, show specific error messages
             if (validationResult.errors.length > 0) {
-                // 分别显示每个字段的错误
+                // Show errors for each field separately
                 validationResult.errors.forEach((error, index) => {
-                    // 错误消息之间稍微间隔显示，提高用户体验
+                    // Stagger error messages for better user experience
                     setTimeout(() => {
-                        toast.error(`${error.field}验证失败`, error.error.replace('Error: ', ''));
-                    }, index * 300); // 每个消息间隔300毫秒
+                        toast.error(`${error.field} Validation Failed`, error.error.replace('Error: ', ''));
+                    }, index * 300); // 300ms delay between messages
                 });
             } else {
-                // 如果没有具体错误（不应该发生），显示通用错误消息
-                toast.error('验证失败', '请检查所有输入字段是否正确');
+                // If no specific errors (shouldn't happen), show generic error message
+                toast.error('Validation Failed', 'Please check all input fields are correct');
             }
         }
     });
     
-    // 更新URL参数的函数
+    /**
+     * SECTION: URL Parameter Management
+     */
+    // Function to update URL parameters
     function updateURLParams() {
-        // 获取所有输入框的值
+        // Get values from all input fields
         const streamCode = streamCodeInput.value.trim();
         const server = streamIpInput.value.trim();
         const port = streamPortInput.value.trim();
         const schema = streamSchemaInput.value.trim();
         const vhost = streamVhostInput.value.trim();
         
-        // 创建URL对象
+        // Create URL object
         const url = new URL(window.location.href);
         
-        // 清除旧参数
+        // Clear old parameters
         url.searchParams.delete('stream-code');
         url.searchParams.delete('server');
         url.searchParams.delete('port');
         url.searchParams.delete('schema');
         url.searchParams.delete('vhost');
         
-        // 添加有效的参数
+        // Add valid parameters
         if (streamCode) url.searchParams.set('stream-code', streamCode);
         if (server) url.searchParams.set('server', server);
         if (port) url.searchParams.set('port', port);
         if (schema) url.searchParams.set('schema', schema);
         if (vhost) url.searchParams.set('vhost', vhost);
         
-        // 保留card参数
+        // Preserve card parameter
         const cardParam = new URLSearchParams(window.location.search).get('card');
         if (cardParam !== null && /^[0-3]$/.test(cardParam)) {
             url.searchParams.set('card', cardParam);
         }
         
-        // 更新URL，不刷新页面
+        // Update URL without refreshing the page
         window.history.replaceState({}, '', url);
     }
-    
-    // 延迟更新URL的函数，防止频繁更新
-    function debounceUpdateURL(callback, delay) {
-        let timeout;
-        return function() {
-            clearTimeout(timeout);
-            timeout = setTimeout(callback, delay);
-        };
-    }
-    
-    // 创建防抖动的URL更新函数
-    const debouncedUpdateURL = debounceUpdateURL(updateURLParams, 500);
-    
-    // 为实时验证设置防抖函数
-    function debounceValidation(fn, delay) {
-        let timeout;
-        return function(...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => fn(...args), delay);
-        };
-    }
-    
-    // 防抖后的验证函数，以减少对用户体验的影响
-    const debouncedValidate = debounceValidation((input, validator) => {
-        const value = input.value.trim();
-        if (!value) return; // 不验证空值
-        
-        const result = validator(value);
-        const fieldName = getFieldDisplayName(input);
-        
-        if (result === true) {
-            // 验证成功时不总是显示toast，只在一些关键字段上显示
-            if (input === streamCodeInput) {
-                toast.success(`${fieldName}格式正确`, '格式有效', { duration: 1500 });
-            }
-        } else {
-            // 验证失败时显示友好的错误提示
-            const errorMsg = result.replace('Error: ', '');
-            toast.warning(`${fieldName}格式有误`, errorMsg, { duration: 2000 });
-        }
-    }, 800); // 800ms的防抖延迟
-    
-    // 输入框内容变化时移除错误提示并更新URL
+
+    /**
+     * SECTION: Event Listeners
+     */
+    // Remove error indicators and update URL when input field content changes
     [streamCodeInput, streamIpInput, streamPortInput, streamSchemaInput, streamVhostInput].forEach(input => {
         input.addEventListener('input', function() {
             removeError(this);
-            debouncedUpdateURL();
+            urlParamsManager.updateURLParams(inputMap);
             
-            // 实时验证 - 但使用防抖以避免频繁触发
+            // Real-time validation - but with debounce to avoid frequent triggers
             if (this.value.trim().length > 0) {
-                // 根据不同字段使用不同的验证器
+                // Use different validator based on field type
                 let validator;
                 switch(this.id) {
                     case 'stream-code':
@@ -458,17 +388,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // 为Stream Code输入框添加回车键事件监听
+    // Add Enter key event listener to Stream Code input
     streamCodeInput.addEventListener('keydown', function(e) {
-        // 如果按下的是Enter键
+        // If Enter key is pressed
         if (e.key === 'Enter') {
-            // 阻止默认行为
+            // Prevent default behavior
             e.preventDefault();
             
-            // 立即更新URL
+            // Update URL immediately
             updateURLParams();
             
-            // 如果高级选项未展开，则模拟点击Enter按钮
+            // If advanced options are not expanded, simulate Enter button click
             if (advancedSettings.style.display !== 'flex') {
                 enterButton.click();
             }
