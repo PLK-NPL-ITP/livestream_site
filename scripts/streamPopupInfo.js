@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Show success toast message
-        toast.success('Connecting', `About to watch: ${streamTitle}`);
+        toast.success('Connecting', `Joining livestream: ${streamTitle}`);
         
         // Close popup
         hidePopup();
