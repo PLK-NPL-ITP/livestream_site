@@ -222,7 +222,7 @@ path {
     overflow-x: auto;
     /* scroll-snap-type: x mandatory; */
     flex: 1;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     /* -webkit-overflow-scrolling: touch; */
     width: 100%;
     position: relative;
