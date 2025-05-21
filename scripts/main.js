@@ -1,4 +1,40 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // 设备检测函数
+    function checkDeviceCompatibility() {
+        const smallScreenMaxWidth = 768; // 定义小屏幕设备的最大宽度（通常手机是小于768px）
+        const currentWidth = window.innerWidth;
+        
+        // 检查是否已经在不可用设备页面，避免无限重定向
+        if (window.location.href.includes('unavailable-device.html')) {
+            return;
+        }
+        
+        // 检查是否是从不可用设备页面返回的（通过URL参数判断）
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromUnavailable = urlParams.get('from') === 'unavailable';
+        
+        if (currentWidth < smallScreenMaxWidth) {
+            // 小屏幕设备，重定向到不可用页面
+            window.location.href = 'unavailable-device.html';
+        } else {
+            // 中大屏幕设备，显示欢迎消息（但如果是从不可用页面返回则不显示）
+            if (typeof toast !== 'undefined' && toast.success && !fromUnavailable) {
+                toast.success('设备兼容', '欢迎使用我们的直播平台');
+            }
+        }
+    }
+    
+    // 在页面加载时执行设备检测
+    checkDeviceCompatibility();
+    
+    // 监听窗口大小变化，重新检测设备兼容性
+    // 使用防抖处理，避免频繁触发重定向
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(checkDeviceCompatibility, 250);
+    });
+    
     // DOM Elements
     const scroller = document.getElementById('scroller');
     const cards = document.querySelectorAll('.scroller-card');
@@ -13,11 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // State
     let isLoggedIn = true; // Change to true to test logged in state
     let currentIndex = 0;
-    let isDragging = false;
-    let startPosX = 0;
-    let currentTranslate = 0;
-    let prevTranslate = 0;
-    let animationID = 0;
+
 
     // Initialize
     updateAuthState();
@@ -520,47 +552,12 @@ document.addEventListener('DOMContentLoaded', function () {
         // Login button
         loginBtn.addEventListener('click', toggleLogin);
 
-        // Nav items click
-        navItems.forEach((item, index) => {
-            item.addEventListener('click', () => {
-                if (index === 2 && !isLoggedIn) {
-                    toggleLogin();
-                    return;
-                }
-                goToCard(index);
-            });
-        });
-
-        // Indicator dots click
-        indicatorDots.forEach((dot, index) => {
-            dot.addEventListener('click', () => {
-                if (index === 2 && !isLoggedIn) {
-                    toggleLogin();
-                    return;
-                }
-                goToCard(index);
-            });
-        });
-
         // Join stream button
         document.querySelector('.btn-join')?.addEventListener('click', joinStream);
 
         // Start new stream button
         document.querySelector('.btn-new')?.addEventListener('click', startNewStream);
 
-        // Touch events for mobile
-        scroller.addEventListener('touchstart', touchStart);
-        scroller.addEventListener('touchmove', touchMove);
-        scroller.addEventListener('touchend', touchEnd);
-
-        // Mouse events for desktop
-        scroller.addEventListener('mousedown', touchStart);
-        scroller.addEventListener('mousemove', touchMove);
-        scroller.addEventListener('mouseup', touchEnd);
-        scroller.addEventListener('mouseleave', touchEnd);
-
-        // Wheel event for horizontal scrolling
-        scroller.addEventListener('wheel', handleWheel, { passive: false });
 
         document.getElementById('advanced-toggle').addEventListener('click', function (e) {
             e.preventDefault();
@@ -632,203 +629,4 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 1000);
         }
     }
-
-    function goToCard(index) {
-        if (index < 0 || index >= cards.length) return;
-
-        currentIndex = index;
-        updateActiveCard();
-        updateActiveNav();
-        updateActiveIndicator();
-        
-        // 更新URL参数，不刷新页面
-        const url = new URL(window.location.href);
-        url.searchParams.set('card', index.toString());
-        window.history.replaceState({}, '', url);
-
-        // Scroll to the card
-        cards[index].scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest',
-            inline: 'center'
-        });
-    }
-
-    function updateActiveCard() {
-        cards.forEach((card, i) => {
-            card.classList.toggle('active', i === currentIndex);
-        });
-    }
-
-    function updateActiveNav() {
-        navItems.forEach((item, i) => {
-            item.classList.toggle('active', i === currentIndex);
-        });
-    }
-
-    function updateActiveIndicator() {
-        indicatorDots.forEach((dot, i) => {
-            dot.classList.toggle('active', i === currentIndex);
-        });
-    }
-
-    function isAtScrollBoundary(element) {
-        return {
-            top: element.scrollTop === 0,
-            bottom: Math.abs(element.scrollHeight - element.scrollTop - element.clientHeight) < 1
-        };
-    }
-
-    function findScrollableParent(element) {
-        while (element && element !== scroller) {
-            const style = window.getComputedStyle(element);
-            if (style.overflowY === 'auto' || style.overflowY === 'scroll' ||
-                style.overflowX === 'auto' || style.overflowX === 'scroll') {
-                if (element.scrollHeight > element.clientHeight ||
-                    element.scrollWidth > element.clientWidth) {
-                    return element;
-                }
-            }
-            element = element.parentElement;
-        }
-        return null;
-    }
-
-    function touchStart(e) {
-        const scrollableElement = findScrollableParent(e.target);
-
-        if (scrollableElement && scrollableElement !== scroller) {
-            const boundaries = isAtScrollBoundary(scrollableElement);
-
-            // Only allow page switching if:
-            // 1. At top and scrolling up
-            // 2. At bottom and scrolling down
-            // 3. Not in a scrollable element
-            if (!((boundaries.top && e.deltaY < 0) ||
-                (boundaries.bottom && e.deltaY > 0))) {
-                return;
-            }
-        }
-        
-        console.log('Touch start');
-        if (e.type === 'mousedown') {
-            startPosX = e.clientX;
-        } else {
-            startPosX = e.touches[0].clientX;
-        }
-        prevTranslate = currentTranslate;
-        cancelAnimationFrame(animationID);
-    }
-
-    function touchMove(e) {
-        if (!isDragging && e.type !== 'touchmove') return;
-        
-        const scrollableElement = findScrollableParent(e.target);
-
-        if (scrollableElement && scrollableElement !== scroller) {
-            const boundaries = isAtScrollBoundary(scrollableElement);
-
-            // Only allow page switching if:
-            // 1. At top and scrolling up
-            // 2. At bottom and scrolling down
-            // 3. Not in a scrollable element
-            if (!((boundaries.top && e.deltaY < 0) ||
-                (boundaries.bottom && e.deltaY > 0))) {
-                return;
-            }
-        }
-        console.log('Touch move');
-
-        const currentPosition = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
-        const diff = currentPosition - startPosX;
-
-        // Apply damping effect
-        currentTranslate = prevTranslate + diff * 0.7;
-
-        // Apply rubber band effect at boundaries
-        if (currentIndex === 0 && currentTranslate > 0) {
-            currentTranslate = Math.log(1 + diff * 0.01) * 50;
-        } else if (currentIndex === cards.length - 1 && currentTranslate < 0) {
-            currentTranslate = -Math.log(1 + Math.abs(diff) * 0.01) * 50;
-        }
-
-        scroller.style.transform = `translateX(${currentTranslate}px)`;
-        isDragging = true;
-    }
-
-    function touchEnd() {
-        if (!isDragging) return;
-        
-        console.log('Touch end');
-        isDragging = false;
-        const movedBy = currentTranslate - prevTranslate;
-
-        scroller.style.transform = `translateX(0)`;
-        if (movedBy < -100 && currentIndex < cards.length - 1) {
-            // Swipe left
-            goToCard(currentIndex + 1);
-        } else if (movedBy > 100 && currentIndex > 0) {
-            // Swipe right
-            goToCard(currentIndex - 1);
-        } else {
-            // Return to current card
-            goToCard(currentIndex);
-        }
-    }
-
-    function handleWheel(e) {
-        const scrollableElement = findScrollableParent(e.target);
-
-        if (scrollableElement && scrollableElement !== scroller) {
-            const boundaries = isAtScrollBoundary(scrollableElement);
-
-            // Only allow page switching if:
-            // 1. At top and scrolling up
-            // 2. At bottom and scrolling down
-            // 3. Not in a scrollable element
-            if (!((boundaries.top && e.deltaY < 0) ||
-                (boundaries.bottom && e.deltaY > 0))) {
-                return;
-            }
-        }
-        
-        e.preventDefault();
-        if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
-
-        if (e.deltaY > 0 && currentIndex < cards.length - 1) {
-            // Scroll down - move right
-            goToCard(currentIndex + 1);
-        } else if (e.deltaY < 0 && currentIndex > 0) {
-            // Scroll up - move left
-            goToCard(currentIndex - 1);
-        }
-    }
-    
-    // 从URL参数中获取card参数，切换到指定卡片
-    function getInitialCardFromURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const cardParam = urlParams.get('card');
-        
-        // 检查card参数是否存在且为0-3之间的数字
-        if (cardParam !== null && /^[0-3]$/.test(cardParam)) {
-            const cardIndex = parseInt(cardParam, 10);
-            return cardIndex;
-        }
-        
-        // 默认返回0
-        return 0;
-    }
-
-    // 初始化时获取并切换到指定卡片
-    const initialCard = getInitialCardFromURL();
-    
-    // 根据URL参数初始化卡片
-    goToCard(initialCard);
-
-    // Handle window resize
-    window.addEventListener('resize', () => {
-        setTimeout(() => {
-            goToCard(currentIndex);
-        }, 500);
-    });
 });
