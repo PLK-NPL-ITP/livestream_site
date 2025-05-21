@@ -1,22 +1,44 @@
-// 视图切换功能
+/**
+ * View Switcher Module
+ * 
+ * This module provides the following functionalities:
+ * 1. Grid/List view switching for stream display
+ * 2. Tags view toggle for showing/hiding stream tags
+ * 3. Stream sorting by title or time (ascending/descending)
+ * 4. Automatic loading and saving of user view preferences using localStorage
+ * 5. Processing stream descriptions for better display in list view
+ * 
+ * Core Implementation:
+ * - Uses DOM event listeners for UI interaction
+ * - Stores user preferences in localStorage
+ * - Provides public methods for other modules to use
+ */
+
 document.addEventListener('DOMContentLoaded', function () {
+    /************************************
+     * INITIALIZATION
+     ************************************/
+    // DOM elements
     const gridViewBtn = document.getElementById('grid-view-btn');
     const listViewBtn = document.getElementById('list-view-btn');
-    const adminViewBtn = document.getElementById('tags-view-btn');
+    const tagsViewBtn = document.getElementById('tags-view-btn'); // Previously adminViewBtn
     const sortStreamsBtn = document.getElementById('sort-streams-btn');
     const streamList = document.getElementById('public-streams');
     
-    // 加载保存的视图首选项
+    // Load saved view preferences
     const savedView = localStorage.getItem('streamView') || 'grid';
     const isTagsView = localStorage.getItem('tagsView') === 'true';
-    const savedSortMethod = localStorage.getItem('streamSort') || 'time-desc'; // 默认为时间降序（最新优先）
+    const savedSortMethod = localStorage.getItem('streamSort') || 'time-desc'; // Default to time descending (newest first)
     
-    // 初始化视图
+    // Initialize view
     setActiveView(savedView);
     setTagsView(isTagsView);
     setSortMethod(savedSortMethod);
     
-    // 绑定点击事件
+    /************************************
+     * EVENT BINDING
+     ************************************/
+    // Bind click events
     gridViewBtn.addEventListener('click', function() {
         setActiveView('grid');
     });
@@ -25,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setActiveView('list');
     });
     
-    adminViewBtn.addEventListener('click', function() {
+    tagsViewBtn.addEventListener('click', function() {
         setTagsView(!streamList.classList.contains('tags-view'));
     });
     
@@ -33,7 +55,13 @@ document.addEventListener('DOMContentLoaded', function () {
         cycleSortMethod();
     });
     
-    // 设置当前活动视图
+    /************************************
+     * VIEW MANAGEMENT FUNCTIONS
+     ************************************/
+    /**
+     * Sets the active view (grid or list)
+     * @param {string} viewType - The view type ('grid' or 'list')
+     */
     function setActiveView(viewType) {
         if (viewType === 'grid') {
             streamList.classList.remove('list-view');
@@ -44,48 +72,54 @@ document.addEventListener('DOMContentLoaded', function () {
             listViewBtn.classList.add('active');
             gridViewBtn.classList.remove('active');
             
-            // 处理描述文本
+            // Process descriptions when in list view
             processStreamDescriptions();
         }
         
-        // 保存用户偏好
+        // Save user preference
         localStorage.setItem('streamView', viewType);
     }
     
-    // 设置标签视图
+    /**
+     * Sets the tags view state
+     * @param {boolean} isTagsView - Whether to show tags view
+     */
     function setTagsView(isTagsView) {
         if (isTagsView) {
             streamList.classList.add('tags-view');
-            adminViewBtn.classList.add('active');
+            tagsViewBtn.classList.add('active');
         } else {
             streamList.classList.remove('tags-view');
-            adminViewBtn.classList.remove('active');
+            tagsViewBtn.classList.remove('active');
         }
         
-        // 保存用户偏好
+        // Save user preference
         localStorage.setItem('tagsView', isTagsView);
     }
     
-    // 处理流描述文本
+    /**
+     * Processes stream descriptions for display
+     * Handles empty descriptions and prevents duplicate processing
+     */
     function processStreamDescriptions() {
         const streamItems = document.querySelectorAll('.stream-item');
         
         streamItems.forEach(streamItem => {
-            // 获取描述元素
+            // Get description element
             const descriptionEl = streamItem.querySelector('.stream-description');
             
-            // 如果已经处理过，则跳过
+            // Skip if already processed
             if (streamItem.hasAttribute('data-processed')) {
                 return;
             }
             
-            // 为streamItem添加标记，避免重复处理
+            // Mark as processed to avoid duplicate processing
             streamItem.setAttribute('data-processed', 'true');
             
-            // 获取描述文本
+            // Get description text
             const descriptionText = descriptionEl.textContent.trim();
             
-            // 处理空描述
+            // Handle empty descriptions
             if (!descriptionText) {
                 descriptionEl.textContent = "The streamer seems provide a empty description...... Let's have a guess or just click in to view now!";
                 descriptionEl.classList.add('empty-description');
@@ -93,63 +127,69 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    
-    // 初始加载时处理描述
+    // Process descriptions on initial load if in list view
     if (savedView === 'list') {
         processStreamDescriptions();
     }
     
-    // 将processStreamDescriptions函数公开，使其他脚本可以调用
+    // Expose function for other scripts to call
     window.processStreamDescriptions = processStreamDescriptions;
     
-    // 排序相关功能
-    
-    // 设置当前排序方式
+    /************************************
+     * SORTING FUNCTIONS
+     ************************************/
+    /**
+     * Sets the current sort method and updates UI
+     * @param {string} method - The sort method ('title-asc', 'title-desc', 'time-asc', 'time-desc')
+     */
     function setSortMethod(method) {
-        // 获取排序图标元素
+        // Get sort icon element
         const sortIcon = document.getElementById('sort-icon');
         
-        // 始终保持按钮激活状态
+        // Always keep button active
         sortStreamsBtn.classList.add('active');
         
-        // 根据排序方式更新图标
+        // Update icon and title based on sort method
         switch(method) {
             case 'title-asc':
-                sortStreamsBtn.title = '标题升序 (A-Z)';
+                sortStreamsBtn.title = 'Title Ascending (A-Z)';
                 sortIcon.src = './assets/images/arrow-up-a-z.svg';
                 break;
             case 'title-desc':
-                sortStreamsBtn.title = '标题降序 (Z-A)';
+                sortStreamsBtn.title = 'Title Descending (Z-A)';
                 sortIcon.src = './assets/images/arrow-down-a-z.svg';
                 break;
             case 'time-asc':
-                sortStreamsBtn.title = '开始时间 (最早优先)';
+                sortStreamsBtn.title = 'Start Time (Oldest First)';
                 sortIcon.src = './assets/images/arrow-up-1-9.svg';
                 break;
             case 'time-desc':
-                sortStreamsBtn.title = '开始时间 (最新优先)';
+                sortStreamsBtn.title = 'Start Time (Newest First)';
                 sortIcon.src = './assets/images/arrow-down-1-9.svg';
                 break;
             default:
-                // 如果传入意外的值，默认使用时间降序
+                // Default to time descending if unexpected value
                 method = 'time-desc';
-                sortStreamsBtn.title = '开始时间 (最新优先)';
+                sortStreamsBtn.title = 'Start Time (Newest First)';
                 sortIcon.src = './assets/images/arrow-down-1-9.svg';
                 break;
         }
         
-        // 执行排序
+        // Execute sorting
         sortStreamItems(method);
         
-        // 保存用户偏好
+        // Save user preference
         localStorage.setItem('streamSort', method);
     }
     
-    // 循环切换排序方式
+    /**
+     * Cycles through sort methods in sequence
+     * title-asc -> title-desc -> time-asc -> time-desc -> title-asc
+     */
     function cycleSortMethod() {
         const currentMethod = localStorage.getItem('streamSort') || 'time-desc';
         
-        // 只在四种排序方式间循环: title-asc -> title-desc -> time-asc -> time-desc -> title-asc
+        // Cycle through the four sorting methods
         let nextMethod;
         
         switch(currentMethod) {
@@ -166,38 +206,41 @@ document.addEventListener('DOMContentLoaded', function () {
                 nextMethod = 'title-asc';
                 break;
             default:
-                nextMethod = 'time-desc'; // 确保有默认值
+                nextMethod = 'time-desc'; // Ensure default value
         }
         
         setSortMethod(nextMethod);
     }
     
-    // 排序直播项目
+    /**
+     * Sorts stream items based on the specified method
+     * @param {string} method - The sort method
+     */
     function sortStreamItems(method) {
         const streamItems = Array.from(streamList.querySelectorAll('.stream-item'));
         
         if (streamItems.length === 0) {
-            return; // 没有流项目，不需要排序
+            return; // No items to sort
         }
         
         streamItems.sort((a, b) => {
             switch(method) {
-                case 'title-asc': // 标题升序
+                case 'title-asc': // Title ascending
                     const titleA = a.querySelector('.stream-info h3').textContent.trim().toLowerCase();
                     const titleB = b.querySelector('.stream-info h3').textContent.trim().toLowerCase();
                     return titleA.localeCompare(titleB);
                 
-                case 'title-desc': // 标题降序
+                case 'title-desc': // Title descending
                     const titleDescA = a.querySelector('.stream-info h3').textContent.trim().toLowerCase();
                     const titleDescB = b.querySelector('.stream-info h3').textContent.trim().toLowerCase();
                     return titleDescB.localeCompare(titleDescA);
                 
-                case 'time-asc': // 时间升序（最早优先）
+                case 'time-asc': // Time ascending (oldest first)
                     const timeA = new Date(a.getAttribute('data-time'));
                     const timeB = new Date(b.getAttribute('data-time'));
                     return timeA - timeB;
                 
-                case 'time-desc': // 时间降序（最新优先）
+                case 'time-desc': // Time descending (newest first)
                     const timeDescA = new Date(a.getAttribute('data-time'));
                     const timeDescB = new Date(b.getAttribute('data-time'));
                     return timeDescB - timeDescA;
@@ -207,13 +250,16 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        // 重排DOM元素
+        // Reorder DOM elements
         streamItems.forEach(item => {
             streamList.appendChild(item);
         });
     }
     
-    // 将排序方法暴露给其他脚本
+    /************************************
+     * PUBLIC API
+     ************************************/
+    // Expose sorting method for other scripts
     window.applySorting = function() {
         const currentMethod = localStorage.getItem('streamSort') || 'time-desc';
         sortStreamItems(currentMethod);

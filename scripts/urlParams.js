@@ -83,8 +83,8 @@ const urlParamsManager = {
                 url.searchParams.set('card', cardParam);
             }
             
-            // Update URL without refreshing page
-            window.history.replaceState({}, '', url);
+            // Push new URL
+            window.history.pushState({}, '', url);
         }, delay);
     },
     

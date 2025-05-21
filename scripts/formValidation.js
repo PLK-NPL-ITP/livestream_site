@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const streamCode = streamCodeInput.value.trim();
             
             // Show success toast message
-            toast.success('Connection Successful', `Joining livestream: ${streamCode}`);
+            toast.success('Connecting', `Joining livestream: StreamCode[${streamCode}]`);
             
             // Can add redirection code here - delay to let user see toast message
             setTimeout(() => {

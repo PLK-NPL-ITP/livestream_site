@@ -1,29 +1,54 @@
 
+/**
+ * Stream Utilities Module
+ * 
+ * This module provides the following functionalities:
+ * 1. Stream item initialization and management
+ * 2. Dynamic time display and formatting
+ * 3. Viewers count management with random fluctuations
+ * 4. Unique ID generation for stream items
+ * 5. Public API for external manipulation of stream items
+ * 6. Demo stream items generation
+ * 
+ * Core Implementation:
+ * - Uses data attributes to store stream metadata
+ * - Updates time displays at regular intervals
+ * - Provides realistic viewer count simulation
+ * - Integrates with other modules through public API
+ */
+
 document.addEventListener('DOMContentLoaded', function () {
-    // DOM 元素
+    /************************************
+     * INITIALIZATION
+     ************************************/
+    // DOM elements
     const publicStreams = document.getElementById('public-streams');
     let streamItems = document.querySelectorAll('.stream-item');
     
-    // 初始化
+    // Initialize
     initializeStreamItems();
     
-    // 开始定时更新
+    // Start time updaters
     startTimeUpdater();
     
+    /************************************
+     * STREAM ITEM MANAGEMENT
+     ************************************/
     /**
-     * 初始化所有直播项
+     * Initializes all stream items with necessary data
+     * Sets default values for missing attributes
      */
     function initializeStreamItems() {
         streamItems.forEach(item => {
-            // 如果没有data-id，为其生成一个唯一ID
+            // Generate ID if missing
             if (!item.getAttribute('data-id')) {
                 const uniqueId = generateUniqueId();
                 item.setAttribute('data-id', uniqueId);
             }
             
-            // 如果没有data-time，设置当前时间作为开始时间
+            // Set default start time if missing
             if (!item.getAttribute('data-time')) {
-                // 默认设置为随机的1到5小时前
+                // Default to random 1-5 hours ago
                 const randomHours = Math.floor(Math.random() * 5) + 1;
                 const randomMinutes = Math.floor(Math.random() * 60);
                 const startTime = new Date();
@@ -33,35 +58,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 item.setAttribute('data-time', startTime.toISOString());
             }
             
-            // 更新时间显示
+            // Update time display
             updateTimeDisplay(item);
             
-            // 如果没有初始观看人数，设置一个随机数
+            // Set random viewers count if missing
             if (!item.getAttribute('data-viewers')) {
-                const randomViewers = Math.floor(Math.random() * 100) + 5; // 5-104之间的随机数
+                const randomViewers = Math.floor(Math.random() * 100) + 5; // Random between 5-104
                 item.setAttribute('data-viewers', randomViewers);
             }
             
-            // 更新观看人数显示
+            // Update viewers display
             updateViewersDisplay(item);
         });
     }
     
     /**
-     * 生成唯一ID，格式为xxx-xxxx
+     * Generates a unique ID in format xxx-xxxx
+     * @returns {string} Unique ID string
      */
     function generateUniqueId() {
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
         let id = '';
         
-        // 生成前三位
+        // Generate first 3 characters
         for (let i = 0; i < 3; i++) {
             id += chars.charAt(Math.floor(Math.random() * chars.length));
         }
         
         id += '-';
         
-        // 生成后四位
+        // Generate last 4 characters
         for (let i = 0; i < 4; i++) {
             id += chars.charAt(Math.floor(Math.random() * chars.length));
         }
@@ -69,8 +95,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return id;
     }
     
+    /************************************
+     * DISPLAY UPDATES
+     ************************************/
     /**
-     * 更新时间显示
+     * Updates the time display for a stream item
+     * @param {HTMLElement} streamItem - The stream item element
      */
     function updateTimeDisplay(streamItem) {
         const timeElement = streamItem.querySelector('.stream-meta');
@@ -81,39 +111,43 @@ document.addEventListener('DOMContentLoaded', function () {
             const currentTime = new Date();
             const timeDiff = getTimeDifference(startTime, currentTime);
             
-            // 替换开始时间部分，保留观看人数部分
+            // Preserve viewers part when updating time
             const viewersText = timeElement.textContent.split('•')[1] || '';
             timeElement.textContent = `Started ${timeDiff} ago • ${viewersText.trim()}`;
         }
     }
     
     /**
-     * 更新观看人数显示
+     * Updates the viewers count display for a stream item
+     * @param {HTMLElement} streamItem - The stream item element
      */
     function updateViewersDisplay(streamItem) {
         const metaElement = streamItem.querySelector('.stream-meta');
         const viewers = streamItem.getAttribute('data-viewers');
         
         if (metaElement && viewers) {
-            // 保留已经计算好的时间部分
+            // Preserve time part when updating viewers
             const timeText = metaElement.textContent.split('•')[0] || '';
             metaElement.textContent = `${timeText.trim()} • ${viewers} viewers`;
         }
     }
     
     /**
-     * 计算时间差并格式化为友好字符串
+     * Calculates and formats time difference into human-readable string
+     * @param {Date} startDate - The start date
+     * @param {Date} endDate - The end date (usually current time)
+     * @returns {string} Formatted time difference
      */
     function getTimeDifference(startDate, endDate) {
-        // 计算毫秒差
+        // Calculate millisecond difference
         const diff = Math.abs(endDate - startDate);
         
-        // 计算时分秒
+        // Calculate hours, minutes, seconds
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
         
-        // 格式化输出
+        // Format output
         if (hours > 0) {
             return `${hours}h ${minutes}m ${seconds}s`;
         } else if (minutes > 0) {
@@ -124,36 +158,40 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     /**
-     * 开始定时更新时间
+     * Starts interval timers for updating time and viewer counts
      */
     function startTimeUpdater() {
-        // 每秒更新一次时间显示
+        // Update time display every 5 seconds
         setInterval(() => {
-            // 重新获取所有的直播项，确保包含动态添加的项目
+            // Re-query all stream items to include dynamically added ones
             const currentStreamItems = document.querySelectorAll('.stream-item');
             currentStreamItems.forEach(updateTimeDisplay);
         }, 5000);
         
-        // 随机更新观看人数（模拟真实情况）
+        // Randomly update viewer counts every 10 seconds
         setInterval(() => {
             const currentStreamItems = document.querySelectorAll('.stream-item');
             currentStreamItems.forEach(item => {
-                if (Math.random() > 0.7) { // 30%的概率更新
+                if (Math.random() > 0.7) { // 30% chance to update
                     const currentViewers = parseInt(item.getAttribute('data-viewers') || '0');
-                    const change = Math.floor(Math.random() * 5) - 2; // -2到2的随机变化
-                    const newViewers = Math.max(1, currentViewers + change); // 确保至少有1个观众
+                    const change = Math.floor(Math.random() * 5) - 2; // Random change between -2 and +2
+                    const newViewers = Math.max(1, currentViewers + change); // Ensure at least 1 viewer
                     
                     item.setAttribute('data-viewers', newViewers);
                     updateViewersDisplay(item);
                 }
             });
-        }, 10000); // 每10秒更新一次
+        }, 10000);
     }
     
+    /************************************
+     * PUBLIC API
+     ************************************/
     /**
-     * 公开API，允许外部设置观看人数
-     * @param {string} streamId - 直播ID，格式为xxx-xxxx
-     * @param {number} viewers - 新的观看人数
+     * Sets the viewer count for a specific stream
+     * @param {string} streamId - Stream ID in format xxx-xxxx
+     * @param {number} viewers - New viewer count
+     * @returns {boolean} Success status
      */
     window.setStreamViewers = function(streamId, viewers) {
         if (!streamId || isNaN(viewers)) return false;
@@ -169,16 +207,17 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     
     /**
-     * 公开API，允许外部设置直播开始时间
-     * @param {string} streamId - 直播ID，格式为xxx-xxxx
-     * @param {Date|string} startTime - 新的开始时间
+     * Sets the start time for a specific stream
+     * @param {string} streamId - Stream ID in format xxx-xxxx
+     * @param {Date|string} startTime - New start time
+     * @returns {boolean} Success status
      */
     window.setStreamStartTime = function(streamId, startTime) {
         if (!streamId || !startTime) return false;
         
         const streamItem = document.querySelector(`.stream-item[data-id="${streamId}"]`);
         if (streamItem) {
-            // 确保startTime是ISO格式字符串
+            // Ensure startTime is ISO format string
             const timeStr = startTime instanceof Date ? startTime.toISOString() : startTime;
             streamItem.setAttribute('data-time', timeStr);
             updateTimeDisplay(streamItem);
@@ -189,37 +228,28 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     
     /**
-     * 添加新的直播项
-     * @param {Object} options - 直播项的配置选项
-     * @param {string} options.thumbnailSrc - 缩略图路径
-     * @param {string} options.qualityInfo - 质量信息，例如"1080p • 30fps"
-     * @param {string} options.title - 直播标题
-     * @param {string} options.author - 直播作者
-     * @param {Date|string} [options.startTime] - 开始时间，默认为当前时间
-     * @param {number} [options.viewers] - 观看人数，默认为随机值
-     * @param {string} options.visibility - 可见性，"public"或"private"
-     * @param {string[]} options.tags - 标签数组
-     * @param {string} options.description - 直播描述
-     * @returns {HTMLElement} 新创建的直播项元素
+     * Adds a new stream item to the list
+     * @param {Object} options - Stream item configuration options
+     * @returns {HTMLElement} Newly created stream item element
      */
     window.addStreamItem = function(options) {
-        // 检查必要的参数是否存在
+        // Check required parameters
         if (!options.thumbnailSrc || !options.qualityInfo || !options.title || 
             !options.author || !options.visibility || !options.tags) {
             console.error('Missing required parameters for adding stream item');
             return null;
         }
         
-        // 获取或生成ID
+        // Get or generate ID
         const streamId = options.id || generateUniqueId();
         
-        // 设置开始时间，默认为当前时间
+        // Set start time, default to current time
         let startTime;
         if (options.startTime) {
             startTime = options.startTime instanceof Date ? 
                 options.startTime : new Date(options.startTime);
         } else {
-            // 默认为随机的1-5小时前
+            // Default to random 1-5 hours ago
             startTime = new Date();
             const randomHours = Math.floor(Math.random() * 5) + 1;
             const randomMinutes = Math.floor(Math.random() * 60);
@@ -227,15 +257,15 @@ document.addEventListener('DOMContentLoaded', function () {
             startTime.setMinutes(startTime.getMinutes() - randomMinutes);
         }
         
-        // 设置观看人数，默认为随机值
+        // Set viewers count, default to random value
         const viewers = options.viewers || Math.floor(Math.random() * 100) + 5;
         
-        // 创建标签HTML
+        // Create tags HTML
         const tagsHTML = options.tags.map(tag => 
             `<span class="stream-tag">${tag}</span>`
         ).join('');
         
-        // 创建直播项HTML
+        // Create stream item HTML
         const streamHTML = `
             <div class="stream-item" data-visibility="${options.visibility}" data-tags="${options.tags.join(',')}" data-id="${streamId}" data-time="${startTime.toISOString()}" data-viewers="${viewers}">
                 <div class="stream-thumbnail">
@@ -256,26 +286,26 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         `;
         
-        // 添加到DOM
+        // Add to DOM
         publicStreams.insertAdjacentHTML('beforeend', streamHTML);
         
-        // 获取新添加的元素
+        // Get new element
         const newStreamItem = publicStreams.lastElementChild;
         
-        // 更新时间显示
+        // Update time display
         updateTimeDisplay(newStreamItem);
         
-        // 处理描述文本(如果处在列表视图模式)
+        // Process description text (if in list view mode)
         if (typeof window.processStreamDescriptions === 'function') {
             window.processStreamDescriptions();
         }
         
-        // 触发重新筛选（如果filters.js存在这个函数）
+        // Trigger refiltering (if filters.js exists)
         if (typeof window.applyFilters === 'function') {
             window.applyFilters();
         }
         
-        // 应用当前的排序（如果已设置了排序方式）
+        // Apply current sorting (if set)
         if (typeof window.applySorting === 'function') {
             window.applySorting();
         }
@@ -284,22 +314,29 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     
     /**
-     * 清除所有直播项
+     * Clears all stream items from the list
+     * @returns {boolean} Success status
      */
     window.clearAllStreamItems = function() {
         if (publicStreams) {
             publicStreams.innerHTML = '';
+            return true;
         }
+        return false;
     };
     
+    /************************************
+     * DEMO STREAMS
+     ************************************/
     /**
-     * 添加示例直播项
+     * Adds example stream items for demonstration
+     * @returns {boolean} Success status
      */
     window.addExampleStreamItems = function() {
-        // 清除现有直播项
+        // Clear existing items
         window.clearAllStreamItems();
         
-        // 示例1：每周团队会议
+        // Example 1: Weekly Team Meeting
         window.addStreamItem({
             thumbnailSrc: 'assets/images/stream1.jpg',
             qualityInfo: '1080p • 30fps',
@@ -312,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function () {
             description: 'Discussion of current project progress, upcoming milestones, and team assignments for the next sprint.'
         });
         
-        // 示例2：问答环节
+        // Example 2: Q&A Session
         window.addStreamItem({
             thumbnailSrc: 'assets/images/stream1.jpg',
             qualityInfo: '1080p • 30fps',
@@ -325,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function () {
             description: 'Q&A session with the team lead about the new project management methodologies being implemented next month.'
         });
         
-        // 示例3：私人会议
+        // Example 3: Private Meeting
         window.addStreamItem({
             thumbnailSrc: 'assets/images/stream1.jpg',
             qualityInfo: '1080p • 30fps',
@@ -338,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function () {
             description: ''
         });
         
-        // 示例4：API集成教学
+        // Example 4: API Workshop
         window.addStreamItem({
             thumbnailSrc: 'assets/images/stream1.jpg',
             qualityInfo: '1080p • 30fps',
@@ -351,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function () {
             description: 'Live coding session demonstrating the new API integration with third-party services. Join to learn the implementation details! This hands-on session will help developers understand how to efficiently connect our platform with external services.'
         });
         
-        // 示例5：产品展示
+        // Example 5: Product Showcase
         window.addStreamItem({
             thumbnailSrc: 'assets/images/stream1.jpg',
             qualityInfo: '1080p • 30fps',
@@ -364,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function () {
             description: 'Product showcase for the upcoming release. We\'ll be demonstrating all the new features and taking feedback from the team. This live session is especially important for product managers and UX designers as we\'ll cover detailed interface changes.'
         });
         
-        // 最后确保处理所有直播项的描述
+        // Process all descriptions
         if (typeof window.processStreamDescriptions === 'function') {
             window.processStreamDescriptions();
         }
