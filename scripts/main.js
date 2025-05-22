@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             // 中大屏幕设备，显示欢迎消息（但如果是从不可用页面返回则不显示）
             if (typeof toast !== 'undefined' && toast.success && !fromUnavailable) {
-                toast.success('设备兼容', '欢迎使用我们的直播平台');
+                toast.success('IntraStream Notice', 'Welcome to IntraStream! Realtime Streaming！');
             }
         }
     }

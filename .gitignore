@@ -1,48 +1,6 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-
-# by winlin
-*.pyc
-*.swp
-.DS_Store
-/trunk/Makefile
-/trunk/objs
-/trunk/src/build-qt-Desktop-Debug
-/trunk/research/librtmp/objs
-/trunk/3rdparty/ccache/ccache-3.1.9
-/trunk/3rdparty/gprof/graphviz-2.36.0
-/trunk/research/api-server/static-dir/forward
-/trunk/research/api-server/static-dir/live
-/trunk/research/api-server/static-dir/players
-
-# Apple-specific garbage files.
-.AppleDouble
-
-.idea
-.DS_Store
-*.heap
-*.exe
-
-/.
-.hintrc
-
-cmake-build-debug
-/trunk/ide/srs_clion/CMakeCache.txt
-/trunk/ide/srs_clion/CMakeFiles
-/trunk/ide/srs_clion/Makefile
-/trunk/ide/srs_clion/cmake_install.cmake
-/trunk/ide/srs_clion/srs
-/trunk/ide/srs_clion/Testing/
-/trunk/ide/vscode-build
 .vscode/
+node_modules/
+.hintrc
+package-lock.json
+package.json
