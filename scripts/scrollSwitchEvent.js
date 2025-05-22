@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Define state variables
     let isDragging = false;
     let currentIndex = 0;
+    window.allowScroll = true;
 
     /**
      * SECTION: DOM Element Selection
@@ -72,13 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Indicator dots click
     indicatorDots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
-            if (index === 2 && !isLoggedIn) {
-                toggleLogin();
-                return;
-            }
-            goToCard(index);
-        });
+        dot.addEventListener('click', () => goToCard(index));
     });
     
     // Helper function: Add touch events
@@ -154,6 +149,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function touchMove(e) {              
+        if (!window.allowScroll) {
+            e.preventDefault();
+            return;
+        };
         // Get current touch position
         const currentX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
         const currentY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
@@ -164,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // If vertical scrolling is already determined, let the browser handle it
         if (isScrolling) return;
-
+        
         // Determine swipe direction
         if (touchMoveCount < 3 && !isHorizontalSwipe && !isScrolling) {
             touchMoveCount++;
@@ -199,6 +198,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (touchDuration < 200 && touchMoveCount < 3 && !isHorizontalSwipe && !isScrolling) {
             return; } // Let browser handle the click
         // If vertical scrolling or not horizontal swiping, don't process
+        if (!window.allowScroll) return;
         if (isScrolling || (!isDragging && !isHorizontalSwipe)) return;
         
         e.preventDefault();
@@ -244,6 +244,12 @@ document.addEventListener('DOMContentLoaded', function () {
      * Maps vertical wheel scrolling to horizontal card navigation
      */
     function handleWheel(e) {
+        if (!window.allowScroll) {
+            e.preventDefault();
+            return;
+        }
+        console.log(window.allowScroll);
+
         const scrollableElement = findScrollableParent(e.target);
         if (scrollableElement && scrollableElement !== scroller) {
             const boundaries = isAtScrollBoundary(scrollableElement);
