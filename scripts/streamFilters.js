@@ -1,5 +1,25 @@
+/**
+ * Stream Filters Module
+ * 
+ * This module provides the following functionalities:
+ * 1. Tag-based filtering of stream items
+ * 2. Visibility filtering (all/public/private)
+ * 3. Dynamic tag collection from stream items
+ * 4. Interactive dropdown menus for filter selection
+ * 5. User interface updates reflecting active filters
+ * 
+ * Core Implementation:
+ * - Uses checkbox-based tag selection for OR-logic filtering
+ * - Maintains filter state for real-time updates
+ * - Provides API for other modules to trigger filtering
+ * - Uses event delegation for efficient DOM interaction
+ */
+
 document.addEventListener('DOMContentLoaded', function () {
-    // 获取DOM元素
+    /************************************
+     * INITIALIZATION
+     ************************************/
+    // DOM elements
     const publicStreams = document.getElementById('public-streams');
     const visibilityDropdownBtn = document.getElementById('visibility-dropdown-btn');
     const visibilityDropdownContent = document.getElementById('visibility-dropdown-content');
@@ -7,39 +27,49 @@ document.addEventListener('DOMContentLoaded', function () {
     const tagsDropdownBtn = document.getElementById('tags-dropdown-btn');
     const tagsDropdownContent = document.getElementById('tags-dropdown-content');
     
-    // 存储所有直播项、已筛选的标签和当前可见性选项
+    // State variables
     let allStreamItems = [];
     let selectedTags = [];
-    let currentVisibility = 'all'; // 默认显示所有直播
+    let currentVisibility = 'all'; // Default show all streams
     
-    // 初始化
+    // Initialize filters
     initializeFilters();
     
-    // 初始化筛选器
+    /************************************
+     * FILTER SETUP FUNCTIONS
+     ************************************/
+    /**
+     * Initializes all filters and populates tag dropdowns
+     */
     function initializeFilters() {
-        // 获取所有直播项
+        // Get all stream items
         refreshStreamItems();
         
-        // 收集所有唯一标签
+        // Collect all unique tags
         const allTags = collectAllTags();
         
-        // 生成标签复选框
+        // Generate tag checkboxes
         generateTagCheckboxes(allTags);
         
-        // 设置事件监听器
+        // Set up event listeners
         setupEventListeners();
         
-        // 初次应用筛选
+        // Apply filters initially
         applyFilters();
     }
     
-    // 刷新直播项列表
+    /**
+     * Refreshes the stream items list
+     * Useful when new items are added dynamically
+     */
     function refreshStreamItems() {
         allStreamItems = Array.from(publicStreams.querySelectorAll('.stream-item'));
     }
     
-    
-    // 从所有直播项中收集唯一标签
+    /**
+     * Collects all unique tags from stream items
+     * @returns {Array} Array of unique tags, sorted alphabetically
+     */
     function collectAllTags() {
         const tagsSet = new Set();
         
@@ -54,7 +84,10 @@ document.addEventListener('DOMContentLoaded', function () {
         return Array.from(tagsSet).sort();
     }
     
-    // 生成标签复选框
+    /**
+     * Generates tag checkboxes in the dropdown
+     * @param {Array} tags - Array of tag strings
+     */
     function generateTagCheckboxes(tags) {
         tagsDropdownContent.innerHTML = '';
         
@@ -80,7 +113,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // 添加选中的标签
+    /************************************
+     * TAG MANAGEMENT FUNCTIONS
+     ************************************/
+    /**
+     * Adds a tag to the selected tags list
+     * @param {string} tag - The tag to add
+     */
     function addSelectedTag(tag) {
         if (!selectedTags.includes(tag)) {
             selectedTags.push(tag);
@@ -88,7 +127,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     
-    // 移除选中的标签
+    /**
+     * Removes a tag from the selected tags list
+     * @param {string} tag - The tag to remove
+     */
     function removeSelectedTag(tag) {
         const index = selectedTags.indexOf(tag);
         if (index !== -1) {
@@ -97,7 +139,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     
-    // 更新下拉按钮文本
+    /**
+     * Updates the tags dropdown button text to show selected count
+     */
     function updateDropdownButton() {
         if (selectedTags.length > 0) {
             tagsDropdownBtn.innerHTML = `
@@ -105,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
                     <line x1="7" y1="7" x2="7.01" y2="7"></line>
                 </svg>
-                标签筛选 (${selectedTags.length})
+                Filter Tags (${selectedTags.length})
             `;
         } else {
             tagsDropdownBtn.innerHTML = `
@@ -113,35 +157,41 @@ document.addEventListener('DOMContentLoaded', function () {
                     <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
                     <line x1="7" y1="7" x2="7.01" y2="7"></line>
                 </svg>
-                标签筛选
+                Filter Tags
             `;
         }
     }
     
-    // 应用筛选器
+    /************************************
+     * FILTER APPLICATION FUNCTIONS
+     ************************************/
+    /**
+     * Applies all filters to stream items
+     * Filters by both visibility and tags using OR logic
+     */
     function applyFilters() {
-        // 刷新直播项列表，确保包含新添加的项目
+        // Refresh stream items list to ensure it includes new additions
         refreshStreamItems();
         
-        // 使用currentVisibility变量而不是visibilityFilter.value
+        // Use currentVisibility variable for filter
         const visibility = currentVisibility;
         
         allStreamItems.forEach(item => {
             const itemVisibility = item.getAttribute('data-visibility');
             const itemTags = item.getAttribute('data-tags')?.split(',').map(tag => tag.trim()) || [];
             
-            // 可见性筛选
+            // Visibility filter
             const visibilityMatch = 
                 visibility === 'all' || 
                 (visibility === 'public' && itemVisibility === 'public') || 
                 (visibility === 'private' && itemVisibility === 'private');
             
-            // 标签筛选（使用 OR 逻辑，只要包含任一选中标签即可）
+            // Tag filter (using OR logic - show if any selected tag matches)
             const tagsMatch = 
                 selectedTags.length === 0 || 
                 selectedTags.some(tag => itemTags.includes(tag));
             
-            // 如果两种筛选都匹配，则显示此条目
+            // Show item if both filters match
             if (visibilityMatch && tagsMatch) {
                 item.style.display = '';
             } else {
@@ -150,45 +200,50 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // 设置事件监听器
+    /************************************
+     * EVENT HANDLING
+     ************************************/
+    /**
+     * Sets up all event listeners for filters
+     */
     function setupEventListeners() {
-        // 可见性选项点击事件
+        // Visibility option click events
         visibilityOptions.forEach(option => {
             option.addEventListener('click', function() {
-                // 更新选中状态
+                // Update selected state
                 const value = this.getAttribute('data-value');
                 selectVisibilityOption(value);
                 
-                // 应用筛选
+                // Apply filters
                 applyFilters();
                 
-                // 关闭下拉菜单
+                // Close dropdown
                 visibilityDropdownContent.classList.remove('show');
                 visibilityDropdownBtn.setAttribute('aria-expanded', 'false');
             });
         });
         
-        // 可见性下拉菜单点击切换
+        // Visibility dropdown toggle
         visibilityDropdownBtn.addEventListener('click', function() {
             visibilityDropdownContent.classList.toggle('show');
             this.setAttribute('aria-expanded', visibilityDropdownContent.classList.contains('show'));
         });
         
-        // 标签下拉菜单点击切换
+        // Tags dropdown toggle
         tagsDropdownBtn.addEventListener('click', function() {
             tagsDropdownContent.classList.toggle('show');
             this.setAttribute('aria-expanded', tagsDropdownContent.classList.contains('show'));
         });
         
-        // 点击页面其他地方关闭下拉菜单
+        // Click outside to close dropdowns
         document.addEventListener('click', function(event) {
-            // 关闭标签下拉菜单
+            // Close tags dropdown
             if (!event.target.closest('.tags-dropdown') && tagsDropdownContent.classList.contains('show')) {
                 tagsDropdownContent.classList.remove('show');
                 tagsDropdownBtn.setAttribute('aria-expanded', 'false');
             }
             
-            // 关闭可见性下拉菜单
+            // Close visibility dropdown
             if (!event.target.closest('.visibility-dropdown') && visibilityDropdownContent.classList.contains('show')) {
                 visibilityDropdownContent.classList.remove('show');
                 visibilityDropdownBtn.setAttribute('aria-expanded', 'false');
@@ -196,12 +251,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // 选择可见性选项
+    /**
+     * Selects a visibility option and updates UI
+     * @param {string} value - The visibility value ('all', 'public', 'private')
+     */
     function selectVisibilityOption(value) {
-        // 更新当前选中的可见性
+        // Update current visibility
         currentVisibility = value;
         
-        // 更新所有选项的选中状态
+        // Update all option states
         visibilityOptions.forEach(option => {
             const optionValue = option.getAttribute('data-value');
             const checkbox = option.querySelector('.visibility-checkbox');
@@ -213,17 +271,20 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        // 更新下拉按钮文本
+        // Update dropdown button text
         updateVisibilityButton(value);
     }
     
-    // 更新可见性下拉按钮文本
+    /**
+     * Updates visibility dropdown button text
+     * @param {string} value - The visibility value
+     */
     function updateVisibilityButton(value) {
-        let text = '所有直播';
+        let text = 'All Streams';
         if (value === 'public') {
-            text = '公开直播';
+            text = 'Public Streams';
         } else if (value === 'private') {
-            text = '私人直播';
+            text = 'Private Streams';
         }
         
         visibilityDropdownBtn.innerHTML = `
@@ -232,13 +293,16 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
     
-    // 公开用于其他脚本的函数
+    /************************************
+     * PUBLIC API
+     ************************************/
+    // Expose function for other scripts
     window.applyFilters = function() {
-        // 刷新标签列表
+        // Refresh tag list
         const allTags = collectAllTags();
         generateTagCheckboxes(allTags);
         
-        // 应用过滤器
+        // Apply filters
         applyFilters();
     };
 });
