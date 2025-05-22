@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备不支持 - 直播站点</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/toast.css">
+    <script src="./scripts/toast.js"></script>
+    <style>
+        :root {
+            --primary-color: #ff4757;
+            --secondary-color: #34a853;
+            --danger-color: #ea4335;
+            --warning-color: #fbbc05;
+            --dark-color: #202124;
+            --light-color: white;
+            --gray-color: #5f6368;
+            --light-gray: #e8eaed;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        .unavailable-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            padding: clamp(20px, 5vw, 40px);
+            background-color: var(--light-color);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .unavailable-icon {
+            width: clamp(240px, 35vw, 380px);
+            margin-bottom: clamp(20px, 5vh, 40px);
+        }
+        
+        @keyframes iconEntrance {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) rotate(-10deg);
+                filter: blur(5px);
+            }
+            70% {
+                opacity: 0.9;
+                transform: scale(1.1) rotate(5deg);
+                filter: blur(0);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+                filter: blur(0);
+            }
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .unavailable-title {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            color: var(--dark-color);
+            margin-bottom: clamp(15px, 3vh, 30px);
+            font-weight: 600;
+        }
+        
+        .unavailable-message {
+            font-size: clamp(1rem, 1.5vw, 1.2rem);
+            color: var(--gray-color);
+            line-height: 1.6;
+            max-width: 600px;
+            margin-bottom: clamp(20px, 4vh, 40px);
+        }
+        
+        .release-date {
+            font-size: clamp(1rem, 1.5vw, 1.2rem);
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: clamp(30px, 5vh, 50px);
+            background: rgba(255, 71, 87, 0.1);
+            padding: 10px 20px;
+            border-radius: 30px;
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            background-color: white;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 300px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .back-btn:hover {
+            background-color: #fff8f8;
+            transform: translateY(-2px);
+        }
+        
+        .back-btn svg {
+            stroke: var(--primary-color);
+            transition: transform 0.3s ease;
+        }
+        
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+    </style>
+</head>
+<body>
+    <div class="unavailable-container">
+        <img src="assets/images/unavailable.svg" alt="不支持的设备" class="unavailable-icon" id="unavailable-svg">
+        <h1 class="unavailable-title">抱歉，我们暂不支持小屏幕设备</h1>
+        <p class="unavailable-message">
+            我们的直播站点正在不断优化中，目前仅支持平板电脑、笔记本和桌面电脑等中大屏设备。
+            我们正在努力开发移动设备版本，敬请期待！
+        </p>
+        <div class="release-date">预计完成时间：2025年7月</div>
+        <button class="back-btn" onclick="window.history.back()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            返回上一页
+        </button>
+    </div>
+
+    <script>
+        // 窗口大小变化检测功能
+        const MIN_SCREEN_WIDTH = 768; // 定义中等屏幕的最小宽度（通常平板768px及以上）
+
+        // 检查屏幕尺寸并决定是否重定向
+        function checkScreenSize() {
+            const currentWidth = window.innerWidth;
+            
+            // 如果已经是中大屏幕尺寸，则重定向到首页
+            if (currentWidth >= MIN_SCREEN_WIDTH) {
+                // 显示提示信息
+                if (typeof toast !== 'undefined' && toast.success) {
+                    toast.success('屏幕尺寸合适', '即将为您跳转到主页...');
+                }
+                
+                // 延迟一小段时间后重定向，让用户看到提示信息
+                setTimeout(function() {
+                    // 添加一个参数，防止在重定向后又立即被重定向回来
+                    window.location.href = 'index.html?from=unavailable';
+                }, 1500);
+            }
+        }
+
+        // 监听窗口大小变化事件
+        window.addEventListener('resize', function() {
+            // 使用去抖动（debounce）技术，防止频繁触发重定向
+            clearTimeout(window.resizeTimer);
+            window.resizeTimer = setTimeout(checkScreenSize, 250);
+        });
+
+        // 页面加载动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const svg = document.getElementById("unavailable-svg");
+            
+            // 延迟一点显示图标，使其有动画效果
+            setTimeout(() => {
+                svg.style.opacity = 1;
+                // 添加元素的动画
+                const elements = [
+                    document.querySelector('.unavailable-title'),
+                    document.querySelector('.unavailable-message'),
+                    document.querySelector('.release-date'),
+                    document.querySelector('.back-btn')
+                ];
+                
+                elements.forEach((el, index) => {
+                    if (el) {
+                        el.style.opacity = "0";
+                        el.style.transform = "translateY(20px)";
+                        
+                        setTimeout(() => {
+                            el.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                            el.style.opacity = "1";
+                            el.style.transform = "translateY(0)";
+                        }, 300 + (index * 200));
+                    }
+                });
+            }, 300);
+            
+            // 初始检查一次屏幕尺寸
+            // 但要延迟一会儿，避免在动画显示前就跳转走了
+            setTimeout(checkScreenSize, 2000);
+        });
+    </script>
+</body>
+</html>
