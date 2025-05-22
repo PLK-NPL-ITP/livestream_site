@@ -216,6 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show success toast message
         toast.success('Connecting', `Joining livestream: ${streamTitle}`);
+        preloaderControl.show()
         
         // Close popup
         hidePopup();
@@ -224,7 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             // Actual implementation would navigate to stream viewer page
             // window.location.href = `./stream-viewer.html?id=${streamId}`;
-            console.log(`Navigating to stream viewer page, Stream ID: ${streamId}`);
-        }, 1500);
+            preloaderControl.hide();
+            toast.warning('Development Notice', 'The Livestream View feature is under development, please wait for the next version!');
+        }, 4500);
     }
 });

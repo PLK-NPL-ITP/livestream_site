@@ -147,6 +147,13 @@ document.addEventListener('DOMContentLoaded', function() {
             dot.style.opacity = '0';
         });
         
+        
+        if (preloader.parentNode && typeof preloader.parentNode.scrollTo === 'function') {
+            preloader.parentNode.scrollTo({ top: 0, behavior: 'auto' });
+            preloader.parentNode.style.overflow = 'hidden'; 
+        }
+        
+
         // 显示preloader（淡入效果）
         preloader.style.display = 'flex';
         setTimeout(() => {
@@ -172,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // 淡出效果
+        preloader.parentNode.style.overflow = ''; // 恢复overflow
         preloader.style.opacity = '0';
         
         // 恢复横向滚动（使用全局allowScroll变量）
