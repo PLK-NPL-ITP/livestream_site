@@ -292,12 +292,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Show success toast message
             toast.success('Connecting', `Joining livestream: StreamCode[${streamCode}]`);
-            
+            preloaderControl.show()
+
             // Can add redirection code here - delay to let user see toast message
             setTimeout(() => {
                 // window.location.href = `/stream/${streamCode}`;
-                console.log(`Redirecting to livestream: ${streamCode}`);
-            }, 1500);
+                preloaderControl.hide();
+                toast.warning('Development Notice', 'The Livestream View feature is under development, please wait for the next version!');
+            }, 4000);
         } else {
             // Validation failed, show specific error messages
             if (validationResult.errors.length > 0) {

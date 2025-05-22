@@ -127,19 +127,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function startNewStream() {
-        if (isLoggedIn) {
-            toast.success('准备就绪', '正在启动新的直播...');
-            // 在实际实现中，这将初始化一个新的直播
-            // 并重定向到直播创建页面
-            setTimeout(() => {
-                console.log('即将跳转到创建直播页面');
-                // window.location.href = '/create-stream';
-            }, 1500);
-        } else {
-            toast.warning('需要登录', '请先登录以开始新的直播');
-            setTimeout(() => {
-                toggleLogin();
-            }, 1000);
-        }
+        toast.success('Connecting', `Preparing to start a new stream...`);
+        preloaderControl.show()
+        setTimeout(() => {
+            preloaderControl.hide();
+            toast.warning('Development Notice', 'The Livestream View feature is under development, please wait for the next version!');
+        }, 4000);
     }
 });
