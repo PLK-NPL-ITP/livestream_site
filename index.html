@@ -12,17 +12,35 @@
     <link rel="stylesheet" href="styles/sort-button.css">
     <link rel="stylesheet" href="styles/popup.css">
     <link rel="stylesheet" href="styles/toast.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/preloader.css">
+    <link rel="stylesheet" href="assets/fonts/fonts.css">
 
     <link rel="icon" type="image/svg+xml" href="./assets/images/signal-stream.svg">
-    <script src="./scripts/chart.js"></script>
+    
     <script src="./scripts/main.js"></script>
-    <script src="./scripts/view-switcher.js"></script>
-    <script src="./scripts/filters.js"></script>
-    <script src="./scripts/stream-utils.js"></script>
-    <script src="./scripts/popup.js"></script>
-    <script src="./scripts/form-validation.js"></script>
-    <script src="./scripts/toast.js"></script>
+
+    <!-- Third-party Javascript Libraries -->
+    <script src="./scripts/anime.js"></script>
+    <script src="./scripts/chart.js"></script>
+
+    <!-- Global Events Handlers -->
+    <script src="./scripts/dataValidator.js"></script>
+    <script src="./scripts/urlParams.js"></script>
+    <script src="./scripts/scrollSwitchEvent.js"></script>
+    <script src="./scripts/toastMessage.js"></script>
+    <script src="./scripts/preloaderControl.js"></script>
+    
+    <!-- Homepage Input Box Form Validation -->
+    <script src="./scripts/formValidation.js"></script>
+
+    <!-- Stream List Card Logics Process -->
+    <script src="./scripts/streamViewSwitcher.js"></script>
+    <script src="./scripts/streamFilters.js"></script>
+    <script src="./scripts/streamUtils.js"></script>
+    <script src="./scripts/streamPopupInfo.js"></script>
+
+    <!-- Console Card Logics Process -->
+    <script src="./scripts/consoleChart.js"></script>
     <script>
         // 页面加载完成后动态添加示例直播
         document.addEventListener('DOMContentLoaded', function() {
@@ -106,6 +124,7 @@
             <div class="scroller-card active" id="card-home">
                 <div class="card-container home">
                 <!-- Left Main Content -->
+                
                 <div class="home-main">
                     <h1>Premium video livestream for your intranet network</h1>
                     <p class="subtitle">Secure, private livestreaming for your organization.</p>
