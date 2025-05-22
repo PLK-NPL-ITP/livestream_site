@@ -94,10 +94,8 @@ document.addEventListener('DOMContentLoaded', function () {
         updateActiveNav();
         updateActiveIndicator();
         
-        // Update URL to maintain state on page refresh
-        const url = new URL(window.location.href);
-        url.searchParams.set('card', index.toString());
-        window.history.replaceState({}, '', url);
+        // Update URL to maintain state on page refresh using urlParamsManager
+        urlParamsManager.updateCardParam(index);
 
         // Smooth scroll to the selected card
         cards[index].scrollIntoView({
@@ -274,22 +272,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     
-    /**
-     * SECTION: URL Parameter Handling and Initialization
-     */
-    // Get card parameter from URL to switch to specified card
-    function getInitialCardFromURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const cardParam = urlParams.get('card');
-        
-        // Check if card parameter is valid
-        return (cardParam !== null && /^[0-3]$/.test(cardParam)) 
-            ? parseInt(cardParam, 10) 
-            : 0;
-    }
-
-    // Initialize card and handle window resize
-    goToCard(getInitialCardFromURL());
+    // Initialize card navigation based on URL parameters
+    goToCard(urlParamsManager.getCardFromURL());
     
     // Handle window size changes
     window.addEventListener('resize', () => {

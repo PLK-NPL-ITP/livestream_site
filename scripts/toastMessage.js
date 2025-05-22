@@ -1,9 +1,30 @@
 /**
- * Toast通知系统
- * 用于显示临时通知消息，带有动画效果和自动消失
+ * Toast Notification System
+ * 
+ * Author: Jason Yang Jiepeng, NPL ITP Infrastructure (Development) Group
+ * Date: 2024-05-21
+ * Copyright (c) 2025 NPL ITP Infrastructure (Development) Group
+ * All rights reserved.
+ * Distributed under the MIT License.
+ * 
+ * This module implements a comprehensive toast notification system with the following features:
+ * - Multiple notification types: success, error, warning, info, default
+ * - Animated appearance and disappearance
+ * - Configurable duration and dismissible options
+ * - Visual indicators with icons and progress bars
+ * - Flexible API supporting different parameter formats
+ * - Auto-removal from DOM when dismissed
+ * 
+ * Implementation uses pure JavaScript with DOM manipulation techniques to create
+ * and manage notification elements dynamically.
  */
 
-// 创建toast容器
+/**
+ * SECTION: Core Utility Functions
+ * Basic helper functions for toast creation and management
+ */
+
+// Create toast container
 function createToastContainer() {
     const container = document.createElement('div');
     container.className = 'toast-container';
@@ -11,12 +32,17 @@ function createToastContainer() {
     return container;
 }
 
-// 生成唯一ID
+// Generate unique ID
 function generateId() {
     return `toast-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 }
 
-// 创建toast图标
+/**
+ * SECTION: Toast UI Elements Creation
+ * Functions to build toast UI components
+ */
+
+// Create toast icon
 function createToastIcon(type) {
     const icon = document.createElement('div');
     icon.className = `toast-icon ${type}-icon`;
@@ -40,7 +66,7 @@ function createToastIcon(type) {
             iconPath = './assets/images/circle-info.svg';
     }
     
-    // 创建图像元素
+    // Create image element
     const img = document.createElement('img');
     img.src = iconPath;
     img.alt = `${type} icon`;
@@ -53,12 +79,12 @@ function createToastIcon(type) {
 }
 
 /**
- * 创建主要toast元素
- * @param {string} title - 标题
- * @param {string} message - 消息内容
- * @param {string} type - 类型
- * @param {number} duration - 持续时间
- * @returns {HTMLElement} - Toast元素
+ * Create main toast element
+ * @param {string} title - Title text
+ * @param {string} message - Message content
+ * @param {string} type - Notification type
+ * @param {number} duration - Duration in milliseconds
+ * @returns {HTMLElement} - Toast element
  */
 function createToastElement(title, message, type, duration) {
     const toastId = generateId();
@@ -66,10 +92,10 @@ function createToastElement(title, message, type, duration) {
     toast.className = `toast ${type}`;
     toast.id = toastId;
     
-    // 添加图标
+    // Add icon
     const icon = createToastIcon(type);
     
-    // 添加内容
+    // Add content
     const content = document.createElement('div');
     content.className = 'toast-content';
     
@@ -84,7 +110,7 @@ function createToastElement(title, message, type, duration) {
     content.appendChild(titleEl);
     content.appendChild(messageEl);
     
-    // 创建进度条
+    // Create progress bar
     const progress = document.createElement('div');
     progress.className = 'toast-progress';
     
@@ -92,7 +118,7 @@ function createToastElement(title, message, type, duration) {
     progressBar.className = 'toast-progress-bar';
     progressBar.style.animationDuration = `${duration}ms`;
     
-    // 根据类型设置进度条颜色
+    // Set progress bar color based on notification type
     switch(type) {
         case 'success':
             progressBar.style.backgroundColor = 'rgba(52, 168, 83, 0.2)';
@@ -112,7 +138,7 @@ function createToastElement(title, message, type, duration) {
     
     progress.appendChild(progressBar);
     
-    // 组装toast
+    // Assemble toast
     toast.appendChild(icon);
     toast.appendChild(content);
     toast.appendChild(progress);
@@ -121,126 +147,134 @@ function createToastElement(title, message, type, duration) {
 }
 
 /**
- * 显示toast通知
- * @param {string} title - 要显示的标题
- * @param {string} message - 要显示的消息内容
- * @param {object} options - 配置选项
- * @param {string} options.type - 类型: 'success', 'error', 'warning', 'info', 'default'
- * @param {number} options.duration - 持续时间(毫秒)
- * @param {boolean} options.dismissible - 是否可以点击关闭
+ * SECTION: Main Toast API Functions
+ * Core functions for showing and managing toast notifications
+ */
+
+/**
+ * Show toast notification
+ * @param {string} title - Title to display
+ * @param {string} message - Message content to display
+ * @param {object} options - Configuration options
+ * @param {string} options.type - Type: 'success', 'error', 'warning', 'info', 'default'
+ * @param {number} options.duration - Duration in milliseconds
+ * @param {boolean} options.dismissible - Whether clickable to dismiss
  */
 function showToast(title, message, options = {}) {
-    // 默认选项
+    // Default options
     const defaultOptions = {
         type: 'default',
         duration: 3000,
         dismissible: true
     };
     
-    // 合并选项
+    // Merge options
     const mergedOptions = {...defaultOptions, ...options};
     
-    // 如果只传递了两个参数，且第二个是对象，那么第一个是message，没有title
+    // If only two arguments passed and second is an object, first is message with no title
     if (typeof message === 'object' && options === undefined) {
         options = message;
         message = title;
         title = getDefaultTitle(options.type || defaultOptions.type);
     }
     
-    // 确保有toast容器
+    // Ensure toast container exists
     let container = document.querySelector('.toast-container');
     if (!container) {
         container = createToastContainer();
     }
     
-    // 创建toast元素
+    // Create toast element
     const toast = createToastElement(title, message, mergedOptions.type, mergedOptions.duration);
     
-    // 添加到容器
+    // Add to container
     container.appendChild(toast);
     
-    // 触发显示动画
+    // Trigger display animation
     setTimeout(() => {
         toast.classList.add('show');
     }, 10);
     
-    // 如果可关闭，添加点击事件
+    // If dismissible, add click event
     if (mergedOptions.dismissible) {
         toast.addEventListener('click', () => {
             dismissToast(toast);
         });
     }
     
-    // 设置自动消失
+    // Set auto-dismiss
     const timeoutId = setTimeout(() => {
         dismissToast(toast);
     }, mergedOptions.duration);
     
-    // 存储timeout ID以便可以取消
+    // Store timeout ID for potential cancellation
     toast.dataset.timeoutId = timeoutId;
     
-    // 返回toast的ID，以便可以手动关闭
+    // Return toast ID for manual dismissal if needed
     return toast.id;
 }
 
 /**
- * 根据类型获取默认标题
- * @param {string} type - 消息类型
- * @returns {string} - 默认标题
+ * Get default title based on notification type
+ * @param {string} type - Message type
+ * @returns {string} - Default title
  */
 function getDefaultTitle(type) {
     switch(type) {
         case 'success':
-            return '成功';
+            return 'Success';
         case 'error':
-            return '错误';
+            return 'Error';
         case 'warning':
-            return '警告';
+            return 'Warning';
         case 'info':
-            return '提示';
+            return 'Info';
         default:
-            return '通知';
+            return 'Notification';
     }
 }
 
 /**
- * 关闭特定toast
- * @param {HTMLElement|string} toast - toast元素或ID
+ * Dismiss a specific toast notification
+ * @param {HTMLElement|string} toast - Toast element or ID
  */
 function dismissToast(toast) {
-    // 如果传入的是ID字符串
+    // If string ID is passed
     if (typeof toast === 'string') {
         toast = document.getElementById(toast);
     }
     
     if (!toast) return;
     
-    // 清除自动消失的定时器
+    // Clear the auto-dismiss timer
     if (toast.dataset.timeoutId) {
         clearTimeout(parseInt(toast.dataset.timeoutId));
     }
     
-    // 添加退出动画
+    // Add exit animation
     toast.classList.add('toast-exit');
     
-    // 动画结束后移除元素
+    // Remove element after animation completes
     setTimeout(() => {
         if (toast.parentNode) {
             toast.parentNode.removeChild(toast);
             
-            // 如果容器为空，也移除容器
+            // If container is empty, remove it too
             const container = document.querySelector('.toast-container');
             if (container && container.children.length === 0) {
                 document.body.removeChild(container);
             }
         }
-    }, 300); // 与toast-out动画时间相匹配
+    }, 300); // Match toast-out animation duration
 }
 
-// 便捷方法
+/**
+ * SECTION: Convenience Methods
+ * Shorthand methods for different toast notification types
+ */
 const toast = {
     success: (title, message, options) => {
-        // 处理不同的参数情况
+        // Handle different parameter scenarios
         if (typeof message === 'object' || message === undefined) {
             return showToast(title, { ...message, type: 'success' });
         }
