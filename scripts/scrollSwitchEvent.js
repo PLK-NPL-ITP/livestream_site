@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     // Define state variables
     let isDragging = false;
-    let currentIndex = 0;
+    window.card_currentIndex = 0;
     window.allowScroll = true;
 
     /**
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function goToCard(index) {
         if (index < 0 || index >= cards.length) return;
 
-        currentIndex = index;
+        window.card_currentIndex = index;
         updateActiveCard();
         updateActiveNav();
         updateActiveIndicator();
@@ -110,19 +110,19 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     function updateActiveCard() {
         cards.forEach((card, i) => {
-            card.classList.toggle('active', i === currentIndex);
+            card.classList.toggle('active', i === window.card_currentIndex);
         });
     }
 
     function updateActiveNav() {
         navItems.forEach((item, i) => {
-            item.classList.toggle('active', i === currentIndex);
+            item.classList.toggle('active', i === window.card_currentIndex);
         });
     }
 
     function updateActiveIndicator() {
         indicatorDots.forEach((dot, i) => {
-            dot.classList.toggle('active', i === currentIndex);
+            dot.classList.toggle('active', i === window.card_currentIndex);
         });
     }
     
@@ -205,10 +205,10 @@ document.addEventListener('DOMContentLoaded', function () {
         isScrolling = false;
         
         // Switch cards based on swipe direction
-        if (diffX < 0 && currentIndex < cards.length - 1) {
-            goToCard(currentIndex + 1); // Left swipe
-        } else if (diffX > 0 && currentIndex > 0) {
-            goToCard(currentIndex - 1); // Right swipe
+        if (diffX < 0 && window.card_currentIndex < cards.length - 1) {
+            goToCard(window.card_currentIndex + 1); // Left swipe
+        } else if (diffX > 0 && window.card_currentIndex > 0) {
+            goToCard(window.card_currentIndex - 1); // Right swipe
         }
     }
 
@@ -263,12 +263,12 @@ document.addEventListener('DOMContentLoaded', function () {
         
         e.preventDefault();
         if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
-        if (e.deltaY > 0 && currentIndex < cards.length - 1) {
+        if (e.deltaY > 0 && window.card_currentIndex < cards.length - 1) {
             // Scroll down - move right
-            goToCard(currentIndex + 1);
-        } else if (e.deltaY < 0 && currentIndex > 0) {
+            goToCard(window.card_currentIndex + 1);
+        } else if (e.deltaY < 0 && window.card_currentIndex > 0) {
             // Scroll up - move left
-            goToCard(currentIndex - 1);
+            goToCard(window.card_currentIndex - 1);
         }
     }
     
@@ -278,6 +278,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Handle window size changes
     window.addEventListener('resize', () => {
         clearTimeout(window.resizeSwitcher);
-        window.resizeSwitcher = setTimeout(() => goToCard(currentIndex), 500);
+        window.resizeSwitcher = setTimeout(() => goToCard(window.card_currentIndex), 500);
     });
 });

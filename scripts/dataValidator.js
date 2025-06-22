@@ -92,6 +92,26 @@ const validators = {
      */
     cardParam: function(value) {
         return value !== null && /^[0-3]$/.test(value);
+    },
+    
+    /**
+     * Validates username format (alphanumeric, underscore, and hyphen only)
+     * @param {string} value - Input value to validate
+     * @returns {boolean|string} - True if valid, error message if invalid
+     */
+    username: function(value) {
+        const regex = /^[a-zA-Z0-9_-]+$/;
+        return regex.test(value) ? true : "Error: Username can only contain letters, numbers, underscore, and hyphen";
+    },
+    
+    /**
+     * Validates email format
+     * @param {string} value - Input value to validate
+     * @returns {boolean|string} - True if valid, error message if invalid
+     */
+    email: function(value) {
+        const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return regex.test(value) ? true : "Error: Please enter a valid email address";
     }
 };
 
