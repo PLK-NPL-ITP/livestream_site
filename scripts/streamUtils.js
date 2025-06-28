@@ -346,7 +346,8 @@ document.addEventListener('DOMContentLoaded', function () {
             viewers: 45,
             visibility: 'public',
             tags: ['Discussion', 'Meeting', 'Planning'],
-            description: 'Discussion of current project progress, upcoming milestones, and team assignments for the next sprint.'
+            description: 'Discussion of current project progress, upcoming milestones, and team assignments for the next sprint.',
+            id: 'abc-1234'
         });
         
         // Example 2: Q&A Session

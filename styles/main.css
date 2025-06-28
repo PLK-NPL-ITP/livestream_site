@@ -200,7 +200,7 @@ h2 {
     }
 }
 
-path {
+.livestream-icon path {
     fill: #ff4757;
     stroke: #ff4757;
     stroke-width: 0.5;
@@ -314,7 +314,9 @@ path {
 
 #home-animation-svg {
     opacity: 0;
-    transition: opacity 0.5s ease-in-out
+    transition: opacity 0.5s ease-in-out;
+    width: 100%;
+    height: 100%;
 }
 
 .subtitle {
@@ -872,11 +874,6 @@ path {
 }
 
 /* Console Card Styles */
-.console-container {
-    width: 100%;
-    max-width: 1200px;
-}
-
 .metrics-header {
     display: flex;
     justify-content: space-between;
@@ -1037,19 +1034,500 @@ canvas {
     background-color: var(--light-gray);
 }
 
-/* .login-prompt {
+/* Permissions Table Styles */
+.permissions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+}
+
+.current-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.current-user-info .current-role {
+    font-size: 0.9rem;
+    color: var(--gray-color);
+}
+
+.role-visitor {
+    color: var(--gray-color);
+    font-weight: 600;
+}
+
+.role-user {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.role-streamer {
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+.role-manager {
+    color: var(--warning-color);
+    font-weight: 600;
+}
+
+.role-admin {
+    color: var(--danger-color);
+    font-weight: 600;
+}
+
+.permissions-table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--light-gray);
+    position: relative;
+}
+
+.permissions-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: white;
+    font-size: 0.9rem;
+}
+
+.permissions-table.unified-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.permissions-table thead {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid var(--light-gray);
+}
+
+.permissions-table th {
+    padding: 1rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-color);
+    border-bottom: 1px solid var(--light-gray);
+    position: relative;
+}
+
+.permissions-table th.permission-name {
+    width: 40%;
+    min-width: 250px;
+}
+
+.permissions-table th.role-header {
+    width: 12%;
     text-align: center;
-    padding: 2rem;
+    text-transform: capitalize;
+    position: relative;
+}
+
+.permissions-table th.role-header.current-role {
+    background-color: var(--primary-color);
+    color: white;
+    position: relative;
+    border-radius: 8px 8px 0 0;
+}
+
+.permissions-table th.role-header.current-role::after {
+    content: '★';
+    margin-left: 0.25rem;
+    font-size: 0.8rem;
+}
+
+/* Category separator row styles */
+.category-separator-row {
+    background-color: #f1f3f4;
+    border-top: 2px solid var(--primary-color);
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.category-separator-row:hover {
+    background-color: #f1f3f4 !important;
+}
+
+.category-separator {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.category-separator-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.category-separator-text {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    white-space: nowrap;
+}
+
+.category-separator-line {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(to right, var(--primary-color), transparent);
+    border-radius: 1px;
+}
+
+.permissions-table tbody tr {
+    border-bottom: 1px solid var(--light-gray);
+    transition: background-color 0.2s ease;
+}
+
+.permissions-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.permissions-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.permissions-table tbody tr:last-child .current-user-cell {
+    border-radius: 0 0 8px 8px;
+}
+
+.permissions-table td {
+    padding: 0.75rem 0.5rem;
+    vertical-align: middle;
+    border-right: 1px solid transparent;
+    border-left: 1px solid transparent;
+}
+
+.permission-name-cell {
+    font-weight: 500;
+    color: var(--text-color);
+    padding-left: 1rem;
+}
+
+.permission-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: flex-start;
+}
+
+.permission-name-text {
+    flex: 0 0 auto;
+    text-align: left;
+}
+
+.permission-info-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--gray-color);
+    padding: 2px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    order: 0; /* 将信息按钮放在文本后面 */
+}
+
+.permission-info-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.permission-info-btn:hover {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+/* Alternating category background */
+.permission-row.even-category {
+    background-color: rgba(66, 133, 244, 0.02);
+}
+
+.permission-row.odd-category {
+    background-color: rgba(52, 168, 83, 0.02);
+}
+
+.permission-name-cell {
+    font-weight: 500;
+    color: var(--text-color);
+    padding-left: 1rem;
+}
+
+.permission-cell {
+    text-align: center;
+    position: relative;
+}
+
+.permission-cell.current-user-cell {
+    background-color: rgba(66, 133, 244, 0.08);
+    border-left: 2px solid var(--primary-color);
+    border-right: 2px solid var(--primary-color);
+    position: relative;
+}
+
+/* First row current user cell - connect to header */
+.permissions-table tbody tr:first-child .current-user-cell {
+    border-top: 2px solid var(--primary-color);
+}
+
+/* Last row current user cell - rounded bottom */
+.permissions-table tbody tr:last-child .current-user-cell {
+    border-bottom: 2px solid var(--primary-color);
+    border-radius: 0 0 8px 8px;
+}
+
+/* Special styling for unified table current user column */
+.permissions-table.unified-table .current-user-cell {
+    background-color: rgba(66, 133, 244, 0.08);
+    border-left: 2px solid var(--primary-color);
+    border-right: 2px solid var(--primary-color);
+}
+
+.permissions-table.unified-table tbody tr:first-child .current-user-cell {
+    border-top: none; /* Header already has the top styling */
+}
+
+.permissions-table.unified-table tbody tr:last-child .current-user-cell {
+    border-bottom: 2px solid var(--primary-color);
+    border-radius: 0 0 8px 8px;
+}
+
+.permission-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* Permissions Category Styles */
+.permissions-category {
+    margin-bottom: 2rem;
+}
+
+.permissions-category:last-child {
+    margin-bottom: 0;
+}
+
+.category-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid var(--primary-color);
+    display: inline-block;
+}
+
+.permission-cell {
+    text-align: center;
+    position: relative;
+}
+
+.permission-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.permission-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.permission-icon.denied {
+    color: #ff4757;
+}
+
+.permission-icon.allowed {
+    color: #2ed573;
+}
+
+.permission-icon.highest {
+    color: #ffa502;
+}
+
+/* Permission Details Popup Styles - Matching UserProfile */
+.permission-details-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+    -webkit-backdrop-filter: blur(0px);
+    backdrop-filter: blur(0px);
+    opacity: 0;
+    transition: opacity 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease, background-color 0.3s ease;
+}
+
+.permission-details-popup.active {
+    display: flex;
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.9);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+}
+
+.permission-details-popup.closing {
+    opacity: 0;
+    background-color: rgba(255, 255, 255, 0);
+    -webkit-backdrop-filter: blur(0px);
+    backdrop-filter: blur(0px);
+}
+
+.permission-details-content {
     background-color: white;
     border-radius: 8px;
-    box-shadow: var(--card-shadow);
+    width: 90%;
     max-width: 500px;
-    margin: 0 auto;
-} */
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    position: relative;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    animation: permission-fade-in 0.3s ease forwards;
+}
 
-.login-prompt h2 {
-    margin-bottom: 1rem;
-    color: var(--gray-color);
+@keyframes permission-fade-in {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.permission-details-content.closing {
+    animation: permission-fade-out 0.3s ease forwards;
+}
+
+@keyframes permission-fade-out {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+}
+
+.close-permission-popup {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 71, 87, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    color: #ff4757;
+    transition: background 0.2s;
+}
+
+.close-permission-popup:hover {
+    background: rgba(255, 71, 87, 0.2);
+}
+
+.permission-details-header {
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.permission-details-title {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #202124;
+    font-family: 'Inter', sans-serif;
+}
+
+.permission-details-body {
+    padding: 24px;
+}
+
+.permission-details-description {
+    margin: 0;
+    font-size: 14px;
+    color: #5f6368;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+}
+
+/* Responsive adjustments for permissions table */
+@media (max-width: 768px) {
+    .permissions-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .permissions-table {
+        font-size: 0.8rem;
+    }
+    
+    .permissions-table th,
+    .permissions-table td {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .permissions-table th.permission-name {
+        min-width: 150px;
+    }
+    
+    .permissions-table th.role-header {
+        font-size: 0.75rem;
+    }
+    
+    .permission-name-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .permission-icons {
+        margin-left: 0;
+    }
+    
+    .category-title {
+        font-size: 1rem;
+    }
+    
+    .permission-details-content {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .permission-details-title {
+        font-size: 1.1rem;
+    }
 }
 
 /* Info Card Styles */

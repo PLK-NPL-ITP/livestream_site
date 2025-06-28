@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intranet Livestream Portal</title>
+    <!-- Plyr Video Player -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/description.css">
+    <link rel="stylesheet" href="styles/layout.css">
+    <link rel="stylesheet" href="styles/filters.css">
+    <link rel="stylesheet" href="styles/sort-button.css">
+    <link rel="stylesheet" href="styles/popup.css">
+    <link rel="stylesheet" href="styles/authPopup.css">
+    <link rel="stylesheet" href="styles/toast.css">
+    <link rel="stylesheet" href="styles/preloader.css">
+    <link rel="stylesheet" href="styles/player.css">
+    <link rel="stylesheet" href="assets/fonts/fonts.css">
+
+    <link rel="icon" type="image/svg+xml" href="./assets/images/signal-stream.svg">
+
+    <script src="./scripts/main_livestream.js"></script>
+
+    <!-- Third-party Javascript Libraries -->
+    <script src="./scripts/anime.js"></script>
+    <script src="./scripts/chart.js"></script>
+
+    <!-- Global Events Handlers -->
+    <script src="./scripts/dataValidator.js"></script>
+    <script src="./scripts/urlParams.js"></script>
+    <script src="./scripts/scrollSwitchEvent.js"></script>
+    <script src="./scripts/toastMessage.js"></script>
+    <script src="./scripts/preloaderControl.js"></script>
+    <script src="./scripts/formValidation.js"></script>
+
+    <!-- Stream List Card Logics Process -->
+    <script src="./scripts/streamViewSwitcher.js"></script>
+    <script src="./scripts/streamFilters.js"></script>
+    <script src="./scripts/streamUtils.js"></script>
+    <script src="./scripts/streamPopupInfo.js"></script>
+    
+    <!-- Authentication System -->
+    <script src="./scripts/authAPI.js"></script>
+    <script src="./scripts/authPopup.js"></script>
+    <script src="./scripts/userProfile.js"></script>
+    
+    <!-- Console Card Logics Process -->
+    <script src="./scripts/consoleChart.js"></script>
+    
+    <!-- Player Control -->
+    <script type="text/javascript" src="./scripts/srs.sdk.js"></script>
+    <script src="./scripts/playerControl.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                window.addExampleStreamItems();
+
+                // 初始化Plyr播放器
+                if (!window.plyrInstance) {
+                    window.plyrInstance = new Plyr('#player', {
+                        controls: [
+                            'play-large', 'play', 'mute', 'volume', 'pip', 'airplay', 'fullscreen'
+                        ],
+                        autoplay: true,
+                        muted: true,
+                    });
+                }
+                window.plyrInstance.on('ready', () => {
+                    console.log('Plyr视频播放器已准备就绪');
+                });
+
+                // WebRTC拉流集成
+                let srsRtcPlayer = null;
+                async function startWebRTCPlay() {
+                    if (srsRtcPlayer) {
+                        srsRtcPlayer.close();
+                        srsRtcPlayer = null;
+                    }
+                    srsRtcPlayer = new SrsRtcWhipWhepAsync();
+                    const videoEl = document.getElementById('player');
+                    videoEl.srcObject = srsRtcPlayer.stream;
+                    try {
+                        await srsRtcPlayer.play('http://localhost:1985/rtc/v1/whep/?app=live&stream=livestream', {
+                            videoOnly: false,
+                            audioOnly: false,
+                            onconnected: function () {
+                                console.log('🚀 WebRTC连接成功');
+                            },
+                            onfirstvideo: function () {
+                                console.log('🎬 收到第一个视频数据包');
+                                // 关键：WebRTC流到达后强制播放
+                                videoEl.muted = true;
+                                videoEl.autoplay = true;
+                                videoEl.play().catch(()=>{});
+                                if(window.plyrInstance) window.plyrInstance.play();
+                                toast.warning("Livestream is muted", "Please unmute to hear the audio.");
+                            },
+                            oninactivevideo: function () {
+                                console.log('⚠️ 视频流中断超过3秒');
+                            },
+                            onconnectionlost: function () {
+                                console.log('⛔ 连接永久丢失');
+                            },
+                            onvideoresume: function () {
+                                console.log('🎥 视频流恢复');
+                            },
+                        });
+                    } catch (e) {
+                        if (srsRtcPlayer) srsRtcPlayer.close();
+                        console.error('WebRTC播放失败', e);
+                    }
+                }
+                // 自动播放WebRTC流
+                startWebRTCPlay();
+            }, 100);
+        });
+    </script>
+</head>
+
+<body>
+    <!-- Stream Details Popup -->
+    <div class="stream-details-popup" id="stream-details-popup">
+        <div class="popup-content">
+            <button class="close-popup" id="close-popup" title="Close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </button>
+            <div class="popup-header">
+                <div class="popup-thumbnail">
+                    <img src="" alt="Stream thumbnail" id="popup-thumbnail">
+                    <span class="live-badge">LIVE</span>
+                    <span class="quality-info" id="popup-quality"></span>
+                </div>
+                <div class="popup-info">
+                    <h2 id="popup-title"></h2>
+                    <p class="popup-author" id="popup-author"></p>
+                    <p class="popup-meta" id="popup-meta"></p>
+                    <div class="popup-badges">
+                        <span class="stream-visibility" id="popup-visibility"></span>
+                        <div class="popup-tags" id="popup-tags"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="popup-body">
+                <h3>Description</h3>
+                <p class="popup-description" id="popup-description"></p>
+            </div>
+            <div class="popup-footer">
+                <button class="btn-view-stream" id="btn-view-stream">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 12L19 12M19 12L12 5M19 12L12 19" stroke="#ff4757" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    VIEW STREAM
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="navbar-logo">
+                <div class="livestream-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+                        <path
+                            d="M108.2 71c13.8 11.1 16 31.2 5 45C82.4 154.4 64 203 64 256s18.4 101.6 49.1 140c11.1 13.8 8.8 33.9-5 45s-33.9 8.8-45-5C23.7 386.7 0 324.1 0 256S23.7 125.3 63.2 76c11.1-13.8 31.2-16 45-5zm359.7 0c13.8-11.1 33.9-8.8 45 5C552.3 125.3 576 187.9 576 256s-23.7 130.7-63.2 180c-11.1 13.8-31.2 16-45 5s-16-31.2-5-45c30.7-38.4 49.1-87 49.1-140s-18.4-101.6-49.1-140c-11.1-13.8-8.8-33.9 5-45zM232 256a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm-27.5-74.7c-17.8 19.8-28.5 46-28.5 74.7s10.8 54.8 28.5 74.7c11.8 13.2 10.7 33.4-2.5 45.2s-33.4 10.7-45.2-2.5C129 342.2 112 301.1 112 256s17-86.2 44.8-117.3c11.8-13.2 32-14.3 45.2-2.5s14.3 32 2.5 45.2zm214.7-42.7C447 169.8 464 210.9 464 256s-17 86.2-44.8 117.3c-11.8 13.2-32 14.3-45.2 2.5s-14.3-32-2.5-45.2c17.8-19.8 28.5-46 28.5-74.7s-10.8-54.8-28.5-74.7c-11.8-13.2-10.7-33.4 2.5-45.2s33.4-10.7 45.2 2.5z" />
+                    </svg>
+                </div>
+                <div class="navbar-brand">IntraStream</div>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" data-target="0">Home</li>
+                <li class="nav-item" data-target="1">Streams</li>
+                <li class="nav-item" id="console-nav" data-target="2">Console</li>
+                <li class="nav-item" data-target="3">Info</li>
+            </ul>
+            <div class="auth-section">
+                <button id="login-btn" class="btn-auth">Log In</button>
+            </div>
+        </nav>
+
+        <!-- Main Content - Horizontal Scroller -->
+        <div class="horizontal-scroller" id="scroller">
+            <!-- View Stream Card -->
+            <div class="scroller-card active" id="card-streamView">
+                <div class="card-container streamView">
+                    <div class="stream-player-header" id="stream-player-header">
+                        <!-- 由playerControl.js动态生成内容 -->
+                    </div>
+                    <div class="plyr-container">
+                        <video id="player" class="plyr-video" playsinline controls></video>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stream List Card -->
+            <div class="scroller-card" id="card-streams">
+                <div class="card-container streams">
+                    <div class="streams-header">
+                        <div class="streams-header-left">
+                            <h2>Available Streams</h2>
+                        </div>
+                        <div class="view-options">
+                            <div class="stream-filters">
+                                <div class="visibility-filter">
+                                    <div class="visibility-dropdown">
+                                        <button id="visibility-dropdown-btn" aria-haspopup="true" aria-expanded="false">
+                                            <img src="./assets/images/visibility.svg" alt="Visibility Filter"
+                                                class="svg-icon">
+                                            Visibility Filter
+                                        </button>
+                                        <div class="visibility-dropdown-content" id="visibility-dropdown-content"
+                                            role="menu">
+                                            <div class="visibility-option" role="menuitem" data-value="all">
+                                                <span class="visibility-checkbox checked" id="visibility-all"></span>
+                                                <span class="visibility-label">All Streams</span>
+                                            </div>
+                                            <div class="visibility-option" role="menuitem" data-value="public">
+                                                <span class="visibility-checkbox" id="visibility-public"></span>
+                                                <span class="visibility-label">Public Streams</span>
+                                            </div>
+                                            <div class="visibility-option" role="menuitem" data-value="private">
+                                                <span class="visibility-checkbox" id="visibility-private"></span>
+                                                <span class="visibility-label">Private Streams</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tags-filter">
+                                    <div class="tags-dropdown">
+                                        <button id="tags-dropdown-btn" aria-haspopup="true" aria-expanded="false">
+                                            <img src="./assets/images/tags.svg" alt="Tags Filter" class="svg-icon">
+                                            Tags Filter
+                                        </button>
+                                        <div class="tags-dropdown-content" id="tags-dropdown-content" role="menu">
+                                            <!-- Tags options will be dynamically generated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="grid-view-btn" class="view-btn active" title="Grid View">
+                                <img src="./assets/images/grid-view.svg" alt="Grid View" class="view-icon">
+                            </button>
+                            <button id="list-view-btn" class="view-btn" title="List View">
+                                <img src="./assets/images/list-view.svg" alt="List View" class="view-icon">
+                            </button>
+                            <button id="tags-view-btn" class="view-btn" title="Tags View">
+                                <img src="./assets/images/tags.svg" alt="Tags View" class="view-icon">
+                            </button>
+                            <button id="sort-streams-btn" class="view-btn" title="Sort">
+                                <img src="./assets/images/arrow-down-1-9.svg" alt="Sort" id="sort-icon"
+                                    class="sort-icon">
+                            </button>
+                        </div>
+                    </div>
+                    <div class="stream-list" id="public-streams">
+                        <!-- Stream items will be dynamically generated by JavaScript -->
+                    </div>
+                    <div class="private-streams-notice" id="private-streams-notice">
+                        <p>Log in to view private streams!</p>
+                    </div>
+                    <!-- <div class="scroll-indicator">
+                    <span>↓ Scroll for more</span>
+                </div> -->
+                </div>
+
+
+            </div>
+
+            <!-- Console Card (changes based on auth) -->
+            <div class="scroller-card" id="card-console">
+                <div class="card-container console">
+                    <div class="console-container" id="console-content">
+                        <!-- Content will be replaced by JS based on auth -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="scroller-card" id="card-info">
+                <div class="info-container">
+                    <h2>About IntraStream</h2>
+                    <div class="version-info">
+                        <p>Version: 6.0.166.3a</p>
+                        <p>Last Updated: 15 / 05 / 2025</p>
+                    </div>
+                    <div class="contributors">
+                        <h3>Contributors</h3>
+                        <ul>
+                            <li>Jason Yang Jiepeng</li>
+                            <li>NPL ITP Development Group</li>
+                        </ul>
+                    </div>
+                    <div class="tech-stack">
+                        <h3>Technology Stack</h3>
+                        <p>Built with modern web technologies including HTML5, CSS3, JavaScript, and WebRTC.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Indicator -->
+        <div class="page-indicator">
+            <span class="indicator-dot active" data-index="0"></span>
+            <span class="indicator-dot" data-index="1"></span>
+            <span class="indicator-dot" data-index="2"></span>
+            <span class="indicator-dot" data-index="3"></span>
+        </div>
+    </div>
+
+
+</body>
+
+</html>

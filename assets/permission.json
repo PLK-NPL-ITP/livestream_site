@@ -1,0 +1,152 @@
+[
+    {
+        "category": "Streams Access",
+        "permissions": [
+            {
+                "name": "View Public Streamline",
+                "visitor": "allowed",
+                "user": "allowed",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "allowed"
+            },
+            {
+                "name": "View Private Streamline",
+                "visitor": "denied",
+                "user": "allowed",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "allowed"
+            },
+            {
+                "name": "View Unlisted Streamline",
+                "visitor": "denied",
+                "user": "allowed",
+                "streamer": "allowed",
+                "manager": "highest",
+                "admin": "highest",
+                "description": "Unlisted streams are not discoverable at the streams page, but can only be accessed via direct links and logged in also required. <b>Administrators and Manager can view unlisted streams freely.</b>"
+            },
+            {
+                "name": "Comment on Different Streams",
+                "visitor": "denied",
+                "user": "allowed",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "highest",
+                "description": "For all users that have logged in, they can comment on different streams but need to follow specific rules listed in different streams. <b>Administrators can comments without restrictions.</b>"
+            }
+        ]
+    },
+    {
+        "category": "Streams Management",
+        "permissions": [
+            {
+                "name": "Create Public Streams",
+                "visitor": "denied",
+                "user": "denied",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "allowed"
+            },
+            {
+                "name": "Create Private Streams",
+                "visitor": "denied",
+                "user": "denied",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "allowed"
+            },
+            {
+                "name": "Create Unlisted Streams",
+                "visitor": "denied",
+                "user": "denied",
+                "streamer": "denied",
+                "manager": "allowed",
+                "admin": "allowed",
+                "description": "Create unlisted streams that are not publicly discoverable but accessible via direct link."
+            },
+            {
+                "name": "Modify Streams Information",
+                "visitor": "denied",
+                "user": "denied",
+                "streamer": "allowed",
+                "manager": "highest",
+                "admin": "highest",
+                "description": "Modify the information of streams created by you, including title, description, and tags. Managers and Administrators can modify any stream's information without restrictions."
+            },
+            {
+                "name": "Stop and Delete Streams Manually",
+                "visitor": "denied",
+                "user": "denied",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "highest",
+                "description": "Stop and delete your own streams without stopping the streaming source (stop abnormally). Managers can stop and delete any stream, while Administrators have the highest level of control over all streams."
+            }
+        ]
+    },
+    {
+        "category": "Account Management",
+        "permissions": [
+            {
+                "name": "Register New Account",
+                "visitor": "allowed",
+                "user": "allowed",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "allowed"
+            },
+            {
+                "name": "View Users Profile",
+                "visitor": "denied",
+                "user": "allowed",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "highest",
+                "description": "You can only view your own profile information. Administrators can view all user profiles without restrictions."
+            },
+            {
+                "name": "Modify Account Information",
+                "visitor": "denied",
+                "user": "allowed",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "highest",
+                "description": "Modify your own account information such as username, email, and profile settings. Administrators can modify other users' account information."
+            },
+            {
+                "name": "Modify Account Password",
+                "visitor": "denied",
+                "user": "allowed",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "allowed",
+                "description": "Only you can modify your own account password. Administrators does not have the permission to modify other users' passwords for any reasons."
+            },
+            {
+                "name": "Delete Account",
+                "visitor": "denied",
+                "user": "allowed",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "highest",
+                "description": "Delete your own account and all associated data. Only Administrators can delete other users' accounts and manage account removals across the platform."
+            }
+        ]
+    },
+    {
+        "category": "System Management",
+        "permissions": [
+            {
+                "name": "View System Information and Metrics",
+                "visitor": "denied",
+                "user": "denied",
+                "streamer": "allowed",
+                "manager": "allowed",
+                "admin": "allowed",
+                "description": "View system information and metrics related to streams, users, and platform performance."
+            }
+        ]
+    }
+]

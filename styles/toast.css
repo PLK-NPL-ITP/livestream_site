@@ -3,7 +3,7 @@
     position: fixed;
     top: 80px; /* 位于navbar下方 */
     right: 20px;
-    /* z-index: 9999; */
+    z-index: 9999; /* 确保 toast 在所有弹窗之上 */
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -27,6 +27,8 @@
     transition: var(--transition);
     border-left: 4px solid var(--primary-color);
     cursor: pointer;
+    position: relative;
+    z-index: 10000; /* 确保每个 toast 也在最高层级 */
 }
 
 .toast.show {

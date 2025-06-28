@@ -1,0 +1,480 @@
+/* Auth Popup Styles */
+/* 
+ * Author: GitHub Copilot
+ * Date: 2025-06-13
+ * 
+ * Authentication popup system with modern glassmorphism design
+ * Supports both login and register forms with smooth transitions
+ */
+
+.auth-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001;
+    -webkit-backdrop-filter: blur(0px);
+    backdrop-filter: blur(0px);
+    opacity: 0;
+    transition: opacity 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease, background-color 0.3s ease;
+}
+
+.auth-popup.active {
+    display: flex;
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.9);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+/* 退场动画 - 背景毛玻璃效果逐渐消失 */
+.auth-popup.closing {
+    opacity: 0;
+    background-color: rgba(255, 255, 255, 0);
+    -webkit-backdrop-filter: blur(0px);
+    backdrop-filter: blur(0px);
+    transition: opacity 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease, background-color 0.3s ease;
+}
+
+.auth-popup-content {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
+                0 2px 6px rgba(0, 0, 0, 0.08);
+    position: relative;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    animation: fadeScale 0.3s ease-out forwards;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.auth-popup-content.closing {
+    animation: fadeOut 0.15s ease-in forwards;
+}
+
+/* 入场动画 - 与 Stream Popup 相同 */
+@keyframes fadeScale {
+    0% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 退场动画 - 与 Stream Popup 相同 */
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+.auth-close-popup {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 71, 87, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    color: #ff4757;
+    transition: background 0.2s;
+}
+
+.auth-close-popup:hover {
+    background: rgba(255, 71, 87, 0.2);
+}
+
+.auth-close-popup svg {
+    width: 24px;
+    height: 24px;
+}
+
+.auth-header {
+    padding: 2rem 2rem 1rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.auth-title {
+    font-family: 'Pacifico', cursive;
+    font-size: 1.75rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    color: var(--gray-color);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.auth-tabs {
+    display: flex;
+    background-color: rgba(248, 249, 250, 0.8);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 1rem;
+    position: relative;
+    width: 280px; /* 缩小宽度 */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.auth-tabs::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 1;
+}
+
+.auth-tabs.register-active::before {
+    transform: translateX(100%);
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--gray-color);
+    transition: color 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-size: 0.9rem;
+    position: relative;
+    z-index: 2;
+}
+
+.auth-tab.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.auth-tab:hover:not(.active) {
+    color: var(--dark-color);
+}
+
+.auth-body {
+    padding: 0 2rem 2rem 2rem;
+}
+
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+.auth-input-group {
+    margin: 0 0 1.25rem 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    max-width: 100%;
+    width: 100%;
+    justify-content: center;
+}
+
+.auth-input-group:last-child {
+    margin-bottom: 0;
+}
+
+.auth-input {
+    padding: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    background: white;
+    border-radius: 8px;
+    outline: none;
+    color: #000000;
+    font-size: 1em;
+    transition: 0.5s;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+}
+
+.auth-input.error {
+    border-color: var(--danger-color) !important;
+    animation: inputShake 0.4s;
+}
+
+.auth-input:focus {
+    border: 3px solid var(--primary-color);
+}
+
+.auth-input:valid {
+    border: 3px solid var(--primary-color);
+}
+
+.auth-input::placeholder {
+    color: transparent;
+}
+
+.auth-span {
+    position: absolute;
+    left: 0;
+    padding: 0 10px;
+    pointer-events: none;
+    font-size: 1em;
+    color: rgba(0, 0, 0, 0.5);
+    text-transform: uppercase;
+    transition: all 0.5s;
+    transform-origin: left center;
+}
+
+.auth-input:valid~.auth-span,
+.auth-input:focus~.auth-span {
+    color: var(--primary-color);
+    transform-origin: left center;
+    transform: translateX(20px) translateY(-20px) scale(0.7);
+    padding: 0 10px;
+    background: white;
+    border-left: 3px solid var(--primary-color);
+    border-right: 3px solid var(--primary-color);
+}
+
+/* Error state for spans */
+.auth-span.error {
+    color: var(--danger-color) !important;
+}
+
+.auth-input.error:focus~.auth-span,
+.auth-input.error:valid~.auth-span {
+    color: var(--danger-color) !important;
+    border-left: 3px solid var(--danger-color);
+    border-right: 3px solid var(--danger-color);
+}
+
+/* Animation for input errors */
+@keyframes inputShake {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+    100% { transform: translateX(0); }
+}
+
+.auth-checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.6rem 0;
+}
+
+.auth-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+.auth-checkbox-label {
+    font-size: 0.9rem;
+    color: var(--gray-color);
+    cursor: pointer;
+    user-select: none;
+}
+
+.auth-submit-btn {
+    width: 100%;
+    padding: 0.875rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 1rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.auth-submit-btn:hover {
+    background-color: #e63946;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+}
+
+.auth-submit-btn:active {
+    transform: translateY(0);
+}
+
+.auth-footer {
+    padding: 1rem 2rem;
+    text-align: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    background-color: rgba(248, 249, 250, 0.5);
+    border-radius: 0 0 12px 12px;
+}
+
+.auth-footer-text {
+    font-size: 0.85rem;
+    color: var(--gray-color);
+}
+
+.auth-footer-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.auth-footer-link:hover {
+    text-decoration: underline;
+    color: #e63946;
+}
+
+/* Form transition animations */
+.auth-form-enter {
+    animation: auth-form-slide-in 0.3s ease forwards;
+}
+
+.auth-form-exit {
+    animation: auth-form-slide-out 0.3s ease forwards;
+}
+
+@keyframes auth-form-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes auth-form-slide-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    .auth-popup-content {
+        width: 95%;
+        margin: 1rem;
+    }
+    
+    .auth-header {
+        padding: 1.5rem 1.5rem 1rem 1.5rem;
+    }
+    
+    .auth-body {
+        padding: 0 1.5rem 1.5rem 1.5rem;
+    }
+    
+    .auth-footer {
+        padding: 1rem 1.5rem;
+    }
+    
+    .auth-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Additional glassmorphism effects */
+.auth-popup-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.05) 100%);
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+/* Focus states for accessibility - removed outlines for cleaner design */
+.auth-tab:focus,
+.auth-input:focus,
+.auth-checkbox:focus,
+.auth-submit-btn:focus,
+.auth-close-popup:focus {
+    outline: none;
+}
+
+/* Remove any possible focus box-shadow effects */
+.auth-tab:focus,
+.auth-input:focus,
+.auth-checkbox:focus,
+.auth-submit-btn:focus,
+.auth-close-popup:focus,
+.auth-footer-link:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Ensure checkbox focus state is also removed */
+.auth-checkbox:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Loading state for submit button */
+.auth-submit-btn.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.auth-submit-btn.loading::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

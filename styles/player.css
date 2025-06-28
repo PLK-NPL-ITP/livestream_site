@@ -1,0 +1,287 @@
+/* 视频播放器样式 */
+.card-container.streamView {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.stream-player-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.stream-player-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+}
+
+.stream-player-header-left {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+    gap: 6px;
+}
+
+.stream-player-header h2 {
+    display: flex;
+    align-items: flex-start;
+    font-size: 1.8rem;
+    line-height: 1.1;
+}
+
+.stream-player-header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stream-meta-data {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.stream-id {
+    background-color: rgba(255, 71, 87, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.stream-start-time {
+    color: #ff4757;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stream-start-time svg {
+    width: 14px;
+    height: 14px;
+}
+
+.stream-tags-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.stream-tag-header {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    margin-right: 6px;
+    margin-bottom: 4px;
+    color: #ff4757;
+    background-color: rgba(255, 71, 87, 0.15);
+}
+
+.stream-author {
+    font-weight: 500;
+    margin-bottom: 0;
+}
+
+.stream-quality {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.live-indicator {
+    color: #ff4757;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+    background-color: rgba(255, 71, 87, 0.15);
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.live-indicator::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #ff4757;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+        opacity: 1;
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(255, 71, 87, 0);
+        opacity: 0.8;
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+        opacity: 1;
+    }
+}
+
+.plyr-container {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    margin-bottom: 0;
+    overflow: hidden;
+}
+
+.plyr-video {
+    width: 100%;
+    height: 100%;
+    max-width: 100vw;
+    max-height: 70vh;
+    object-fit: contain;
+    aspect-ratio: 16/9;
+    background: #000;
+    display: block;
+    min-width: 320px;
+    min-height: 180px;
+}
+
+.stream-details {
+    margin-top: 20px;
+    color: #eee;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    padding: 20px;
+    background: rgba(32, 33, 36, 0.5);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.stream-description {
+    flex: 1 1 60%;
+    min-width: 300px;
+}
+
+.stream-description h3 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: #fff;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.stream-description h3::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 1.5px;
+}
+
+.stream-description p {
+    line-height: 1.6;
+    margin-bottom: 15px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.stream-stats {
+    flex: 1 1 30%;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding-left: 20px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stats-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.stats-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stats-value {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.stream-meta {
+    margin-top: 15px;
+}
+
+.stream-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    background-color: rgba(255, 71, 87, 0.2);
+    color: #ff4757;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+/* Plyr自定义样式 */
+.plyr--video {
+    height: 100%;
+    width: 100%;
+    transition: width 0.3s ease, height 0.3s ease;
+    --plyr-color-main: #ff4757;
+    --plyr-video-control-color: #fff;
+    --plyr-video-control-background-hover: rgba(255, 71, 87, 0.5);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .stream-player-container {
+        padding: 15px;
+    }
+    
+    .stream-player-header h2 {
+        font-size: 1.4rem;
+    }
+    
+    .stream-info {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 900px) {
+    .plyr-video {
+        max-height: 40vh;
+    }
+}
