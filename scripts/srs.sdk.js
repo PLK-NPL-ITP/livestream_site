@@ -1,4 +1,3 @@
-
 //
 // Copyright (c) 2013-2025 Winlin
 //
@@ -615,9 +614,12 @@ function SrsRtcWhipWhepAsync() {
     // @options The options to control playing, supports:
     //      videoOnly: boolean, whether only play video, default to false.
     //      audioOnly: boolean, whether only play audio, default to false.
+    //      disconnectOnTimeout: boolean, whether to disconnect when video is inactive for a long time, default to true.
     self.play = async function(url, options) {
         if (url.indexOf('/whip-play/') === -1 && url.indexOf('/whep/') === -1) throw new Error(`invalid WHEP url ${url}`);
         if (options?.videoOnly && options?.audioOnly) throw new Error(`The videoOnly and audioOnly in options can't be true at the same time`);
+
+        self.__internal.disconnectOnTimeout = options?.disconnectOnTimeout ?? true;
 
         if (!options?.videoOnly) self.pc.addTransceiver("audio", {direction: "recvonly"});
         if (!options?.audioOnly) self.pc.addTransceiver("video", {direction: "recvonly"});
@@ -726,11 +728,13 @@ function SrsRtcWhipWhepAsync() {
                 self.__internal.videoState = 'inactive';
                 self.oninactivevideo && self.oninactivevideo();
 
-                // 启动15秒断开倒计时
-                self.__internal.inactiveTimer = setTimeout(()   => {
-                    self.onconnectionlost && self.onconnectionlost();
-                    self.close();
-                }, 10000);
+                if (self.__internal.disconnectOnTimeout) {
+                    // 启动15秒断开倒计时
+                    self.__internal.inactiveTimer = setTimeout(()   => {
+                        self.onconnectionlost && self.onconnectionlost();
+                        self.close();
+                    }, 15000);
+                }
             }
         },
 
@@ -786,6 +790,7 @@ function SrsRtcWhipWhepAsync() {
         lastBytes: 0,
         lastActiveTime: 0,
         currentTrack: null,
+        disconnectOnTimeout: true,
         
         parseId: (url, offer, answer) => {
             let sessionid = offer.substr(offer.indexOf('a=ice-ufrag:') + 'a=ice-ufrag:'.length);

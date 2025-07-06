@@ -214,45 +214,114 @@ document.addEventListener('DOMContentLoaded', function () {
     
     /**
      * Sorts stream items based on the specified method
+     * Respects stream status grouping (planned, live, replay, ended)
      * @param {string} method - The sort method
      */
     function sortStreamItems(method) {
-        const streamItems = Array.from(streamList.querySelectorAll('.stream-item'));
+        const allElements = Array.from(streamList.children);
         
-        if (streamItems.length === 0) {
+        if (allElements.length === 0) {
             return; // No items to sort
         }
         
-        streamItems.sort((a, b) => {
-            switch(method) {
-                case 'title-asc': // Title ascending
-                    const titleA = a.querySelector('.stream-info h3').textContent.trim().toLowerCase();
-                    const titleB = b.querySelector('.stream-info h3').textContent.trim().toLowerCase();
-                    return titleA.localeCompare(titleB);
-                
-                case 'title-desc': // Title descending
-                    const titleDescA = a.querySelector('.stream-info h3').textContent.trim().toLowerCase();
-                    const titleDescB = b.querySelector('.stream-info h3').textContent.trim().toLowerCase();
-                    return titleDescB.localeCompare(titleDescA);
-                
-                case 'time-asc': // Time ascending (oldest first)
-                    const timeA = new Date(a.getAttribute('data-time'));
-                    const timeB = new Date(b.getAttribute('data-time'));
-                    return timeA - timeB;
-                
-                case 'time-desc': // Time descending (newest first)
-                    const timeDescA = new Date(a.getAttribute('data-time'));
-                    const timeDescB = new Date(b.getAttribute('data-time'));
-                    return timeDescB - timeDescA;
-                
-                default:
-                    return 0;
+        // Separate stream items and separators
+        const separators = allElements.filter(el => el.classList.contains('stream-separator'));
+        const streamItems = allElements.filter(el => el.classList.contains('stream-item'));
+        
+        if (streamItems.length === 0) {
+            return; // No stream items to sort
+        }
+        
+        // Group stream items by status priority
+        const statusPriority = {
+            'planned': 0,
+            'streaming': 1,
+            'pausing': 1, // Same as streaming
+            'replay': 2,
+            'ended': 3
+        };
+        
+        // Group items by status
+        const groupedItems = {
+            0: [], // planned
+            1: [], // live (streaming/pausing)
+            2: [], // replay
+            3: []  // ended
+        };
+        
+        streamItems.forEach(item => {
+            const status = item.getAttribute('data-status') || 'ended';
+            const priority = statusPriority[status] !== undefined ? statusPriority[status] : 3;
+            groupedItems[priority].push(item);
+        });
+        
+        // Sort each group individually
+        Object.keys(groupedItems).forEach(priority => {
+            const group = groupedItems[priority];
+            if (group.length > 0) {
+                group.sort((a, b) => {
+                    switch(method) {
+                        case 'title-asc': // Title ascending
+                            const titleA = a.querySelector('.stream-info h3').textContent.trim().toLowerCase();
+                            const titleB = b.querySelector('.stream-info h3').textContent.trim().toLowerCase();
+                            return titleA.localeCompare(titleB);
+                        
+                        case 'title-desc': // Title descending
+                            const titleDescA = a.querySelector('.stream-info h3').textContent.trim().toLowerCase();
+                            const titleDescB = b.querySelector('.stream-info h3').textContent.trim().toLowerCase();
+                            return titleDescB.localeCompare(titleDescA);
+                        
+                        case 'time-asc': // Time ascending (oldest first)
+                            const timeA = new Date(a.getAttribute('data-time'));
+                            const timeB = new Date(b.getAttribute('data-time'));
+                            return timeA - timeB;
+                        
+                        case 'time-desc': // Time descending (newest first)
+                            const timeDescA = new Date(a.getAttribute('data-time'));
+                            const timeDescB = new Date(b.getAttribute('data-time'));
+                            return timeDescB - timeDescA;
+                        
+                        default:
+                            return 0;
+                    }
+                });
             }
         });
         
-        // Reorder DOM elements
-        streamItems.forEach(item => {
-            streamList.appendChild(item);
+        // Clear stream list and rebuild with proper order
+        streamList.innerHTML = '';
+        
+        // Rebuild with separators and sorted groups
+        const groupLabels = {
+            0: 'Planned Streams',
+            1: 'Live Streams', 
+            2: 'Replay Streams',
+            3: 'Ended Streams'
+        };
+        
+        let hasContent = false;
+        Object.keys(groupedItems).forEach(priority => {
+            const group = groupedItems[priority];
+            if (group.length > 0) {
+                // Add separator before each group except the first one
+                if (hasContent && priority > 0) {
+                    const separatorHTML = `
+                        <div class="stream-separator grid-break" data-label="${groupLabels[priority]}">
+                            <div class="separator-line"></div>
+                            <span class="separator-label">${groupLabels[priority]}</span>
+                            <div class="separator-line"></div>
+                        </div>
+                    `;
+                    streamList.insertAdjacentHTML('beforeend', separatorHTML);
+                }
+                
+                // Add sorted items from this group
+                group.forEach(item => {
+                    streamList.appendChild(item);
+                });
+                
+                hasContent = true;
+            }
         });
     }
     

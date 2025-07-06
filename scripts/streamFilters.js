@@ -168,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function () {
     /**
      * Applies all filters to stream items
      * Filters by both visibility and tags using OR logic
+     * Also manages separator visibility based on filtered content
      */
     function applyFilters() {
         // Refresh stream items list to ensure it includes new additions
@@ -176,15 +177,20 @@ document.addEventListener('DOMContentLoaded', function () {
         // Use currentVisibility variable for filter
         const visibility = currentVisibility;
         
+        // Track which groups have visible items
+        const visibleGroups = new Set();
+        
         allStreamItems.forEach(item => {
             const itemVisibility = item.getAttribute('data-visibility');
             const itemTags = item.getAttribute('data-tags')?.split(',').map(tag => tag.trim()) || [];
+            const itemStatus = item.getAttribute('data-status') || 'ended';
             
             // Visibility filter
             const visibilityMatch = 
                 visibility === 'all' || 
                 (visibility === 'public' && itemVisibility === 'public') || 
-                (visibility === 'private' && itemVisibility === 'private');
+                (visibility === 'private' && itemVisibility === 'private') ||
+                (visibility === 'unlisted' && itemVisibility === 'unlisted');
             
             // Tag filter (using OR logic - show if any selected tag matches)
             const tagsMatch = 
@@ -194,8 +200,30 @@ document.addEventListener('DOMContentLoaded', function () {
             // Show item if both filters match
             if (visibilityMatch && tagsMatch) {
                 item.style.display = '';
+                
+                // Track which group this visible item belongs to
+                if (itemStatus === 'planned') {
+                    visibleGroups.add('Planned Streams');
+                } else if (itemStatus === 'streaming' || itemStatus === 'pausing') {
+                    visibleGroups.add('Live Streams');
+                } else if (itemStatus === 'replay') {
+                    visibleGroups.add('Replay Streams');
+                } else {
+                    visibleGroups.add('Ended Streams');
+                }
             } else {
                 item.style.display = 'none';
+            }
+        });
+        
+        // Manage separator visibility
+        const separators = document.querySelectorAll('.stream-separator');
+        separators.forEach(separator => {
+            const label = separator.getAttribute('data-label');
+            if (visibleGroups.has(label)) {
+                separator.style.display = '';
+            } else {
+                separator.style.display = 'none';
             }
         });
     }

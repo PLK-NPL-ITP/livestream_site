@@ -18,7 +18,7 @@
 
     <link rel="icon" type="image/svg+xml" href="./assets/images/signal-stream.svg">
     
-    <script src="./scripts/main.js"></script>
+    <script src="./scripts/homepage_btn.js"></script>
 
     <!-- Third-party Javascript Libraries -->
     <script src="./scripts/anime.js"></script>
@@ -34,6 +34,7 @@
     <!-- Authentication and User Events -->
     <script src="./scripts/authAPI.js"></script>
     <script src="./scripts/authPopup.js"></script>
+    <script src="./scripts/createStreamPopup.js"></script>
     <script src="./scripts/userProfile.js"></script>
     
     <!-- Homepage Input Box Form Validation -->
@@ -48,14 +49,20 @@
     <!-- Console Card Logics Process -->
     <script src="./scripts/consolePage.js"></script>
     <script>
-        // 页面加载完成后动态添加示例直播
-        document.addEventListener('DOMContentLoaded', function() {
-            // 等待所有脚本都加载完毕后执行
-            setTimeout(function() {
-                // 使用我们新的函数添加例子
-                window.addExampleStreamItems();
-            }, 100);
-        });
+        setTimeout(() => {
+            document.getElementById("home-animation-svg").style.opacity = 1;
+            var style = document.createElement('style');
+            style.innerHTML = `
+                .livestream-icon svg {
+                    animation: iconEntrance 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+                }
+
+                .livestream-icon::before {
+                    animation: pulse 1.5s ease-out 0.5s forwards;
+                }
+            `
+            document.head.appendChild(style);
+        }, 500);
     </script>
 </head>
 
@@ -69,30 +76,100 @@
                         stroke-linejoin="round" />
                 </svg>
             </button>
-            <div class="popup-header">
-                <div class="popup-thumbnail">
-                    <img src="" alt="Stream thumbnail" id="popup-thumbnail">
-                    <span class="live-badge">LIVE</span>
-                    <span class="quality-info" id="popup-quality"></span>
+            
+            <!-- Main Content Container -->
+            <div class="popup-main">
+                <!-- Thumbnail Section -->
+                <div class="popup-thumbnail-section">
+                    <div class="popup-thumbnail">
+                        <img src="" alt="Stream thumbnail" id="popup-thumbnail">
+                        <span class="live-badge" id="popup-status-badge">LIVE</span>
+                        <span class="quality-info" id="popup-quality"></span>
+                    </div>
                 </div>
-                <div class="popup-info">
-                    <h2 id="popup-title"></h2>
-                    <p class="popup-author" id="popup-author"></p>
-                    <p class="popup-meta" id="popup-meta"></p>
-                    <div class="popup-badges">
-                        <span class="stream-visibility" id="popup-visibility"></span>
-                        <div class="popup-tags" id="popup-tags"></div>
+                
+                <!-- Info Section -->
+                <div class="popup-info-section">
+                    <div class="popup-stream-header">
+                        <h2 class="popup-title" id="popup-title"></h2>
+                        <p class="popup-author" id="popup-author"></p>
+                        <p class="popup-meta" id="popup-meta"></p>
+                    </div>
+                    
+                    <!-- Badges and Tags -->
+                    <div class="popup-badges-section">
+                        <div class="popup-visibility-container">
+                            <span class="popup-visibility-label">Visibility:</span>
+                            <span class="stream-visibility" id="popup-visibility"></span>
+                        </div>
+                        <div class="popup-tags-container">
+                            <span class="popup-tags-label">Tags:</span>
+                            <div class="popup-tags" id="popup-tags"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="popup-body">
-                <h3>Description</h3>
-                <p class="popup-description" id="popup-description"></p>
+            
+            <!-- Content Section - Description and Details side by side -->
+            <div class="popup-content-section">
+                <!-- Description Area -->
+                <div class="popup-description-area">
+                    <h3 class="description-title">Description</h3>
+                    <p class="popup-description" id="popup-description"></p>
+                </div>
+                
+                <!-- Details Area -->
+                <div class="popup-details-area">
+                    <h3 class="details-title">Stream Details</h3>
+                    <div class="popup-details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Stream ID:</span>
+                            <span class="detail-value" id="popup-stream-id"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Stream Code:</span>
+                            <span class="detail-value" id="popup-stream-code"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Author ID:</span>
+                            <span class="detail-value" id="popup-author-id"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Start Time:</span>
+                            <span class="detail-value" id="popup-start-time"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
+            
+            <!-- Danger Zone Section -->
+            <div class="popup-content-section danger-zone-section" id="stream-danger-zone" style="display: none;">
+                <div class="popup-danger-zone">
+                    <h3 class="danger-title">Danger Zone</h3>
+                    <div class="danger-actions">
+                        <div class="danger-item">
+                            <div class="danger-info">
+                                <span class="danger-action-title">Edit Stream Info</span>
+                                <span class="danger-action-desc">Modify stream information and settings</span>
+                            </div>
+                            <button class="danger-btn secondary" id="edit-stream-btn">Edit Stream Info</button>
+                        </div>
+                        <div class="danger-item">
+                            <div class="danger-info">
+                                <span class="danger-action-title">Terminate Stream</span>
+                                <span class="danger-action-desc">Manually terminate this livestream</span>
+                            </div>
+                            <button class="danger-btn primary" id="terminate-stream-btn">Terminate Stream</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer Actions -->
             <div class="popup-footer">
                 <button class="btn-view-stream" id="btn-view-stream">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 12L19 12M19 12L12 5M19 12L12 19" stroke="#ff4757" stroke-width="2"
+                        <path d="M5 12L19 12M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                     VIEW STREAM
@@ -210,6 +287,10 @@
                                         <div class="visibility-option" role="menuitem" data-value="private">
                                             <span class="visibility-checkbox" id="visibility-private"></span>
                                             <span class="visibility-label">Private Streams</span>
+                                        </div>
+                                        <div class="visibility-option" role="menuitem" data-value="unlisted">
+                                            <span class="visibility-checkbox" id="visibility-unlisted"></span>
+                                            <span class="visibility-label">Unlisted Streams</span>
                                         </div>
                                     </div>
                                 </div>

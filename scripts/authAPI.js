@@ -103,9 +103,21 @@ class AuthAPI {
                 } catch (refreshError) {
                     // 刷新失败，清空认证信息
                     this._clearAuth();
+                    this._emitEvent('profile-updated', {
+                        error: error.message,
+                        isAuthenticated: false,
+                        profile: null
+                    });
+                    this.makeRequest('/api/clean-cookies', { method: 'POST' }, false);
                     throw error;
                 }
             }
+            this._emitEvent('profile-updated', {
+                error: error.message,
+                isAuthenticated: false,
+                profile: null
+            });
+            this.makeRequest('/api/clean-cookies', { method: 'POST' }, false);
             throw error;
         }
     }
@@ -208,6 +220,10 @@ class AuthAPI {
      */
     async logout(all = false) {
         try {
+            if (window.livestream) {
+                console.warn('Notifying livestream server about logout...');
+                await window.livestream.notifyServerExit();
+            }
             if (all) {
                 await this.makeRequest('/api/logout-all', { method: 'POST' }, true);
             } else {

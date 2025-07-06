@@ -40,6 +40,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
         </div>
+        <div class="preloader-item preloader-debug-container">
+                <p class="preloader-debug-info"></p>
+        </div>
     </div>`;
     
     /**
@@ -120,8 +123,9 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * 显示preloader
      * @param {string} loadingText - 可选的加载文本
+     * @param {boolean} animate - 是否启用淡入动画
      */
-    function showPreloader(loadingText = 'Loading......') {
+    function showPreloader(loadingText = 'Loading......', animate = true) {
         // 先添加preloader到DOM
         const preloader = addPreloaderToCurrentCard();
         if (!preloader) return;
@@ -131,6 +135,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (textElement && textElement.textContent !== loadingText) {
             textElement.textContent = loadingText;
             initTextAnimation();
+        }
+
+        // 清空调试信息
+        const debugInfoElement = preloader.querySelector('.preloader-debug-info');
+        if (debugInfoElement) {
+            debugInfoElement.textContent = '';
         }
         
         // 禁止横向滚动（使用全局allowScroll变量）
@@ -153,12 +163,17 @@ document.addEventListener('DOMContentLoaded', function() {
             preloader.parentNode.style.overflow = 'hidden'; 
         }
         
-
-        // 显示preloader（淡入效果）
-        preloader.style.display = 'flex';
-        setTimeout(() => {
+        // 显示preloader（立即显示，无动画）
+        if (animate) {
+            preloader.style.display = 'flex';
+            preloader.style.opacity = '0'; // 初始透明度为0
+            setTimeout(() => {
+                preloader.style.opacity = '1'; // 淡入效果
+            }, 10); // 确保样式更新后再开始淡入
+        } else {
+            preloader.style.display = 'flex';
             preloader.style.opacity = '1';
-        }, 10);
+        }
     }
     
     /**
@@ -203,9 +218,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 500);
     }
 
+    /**
+     * 更新Preloader中的调试信息
+     * @param {string} message - 要显示的调试信息
+     */
+    function updateDebugInfo(message) {
+        const container = getCurrentCardContainer();
+        if (!container) return;
+
+        const preloader = container.querySelector('.preloader');
+        if (!preloader) return;
+
+        const debugInfoElement = preloader.querySelector('.preloader-debug-info');
+        if (debugInfoElement) {
+            debugInfoElement.textContent = message;
+        }
+    }
+
     // 暴露公共API
     window.preloaderControl = {
         show: showPreloader,
-        hide: hidePreloader
+        hide: hidePreloader,
+        updateDebugInfo: updateDebugInfo
     };
 });

@@ -295,11 +295,11 @@ document.addEventListener('DOMContentLoaded', function() {
             preloaderControl.show()
 
             // Can add redirection code here - delay to let user see toast message
+            //跳转到/livestream.html?card=0&stream-code={streamCode}
             setTimeout(() => {
-                // window.location.href = `/stream/${streamCode}`;
-                preloaderControl.hide();
-                toast.warning('Development Notice', 'The Livestream View feature is under development, please wait for the next version!');
-            }, 4000);
+                // preloaderControl.hide();
+                window.location.href = `/livestream.html?card=0&stream-code=${encodeURIComponent(streamCode)}`;
+            }, 2000); // 2 seconds delay to show success message
         } else {
             // Validation failed, show specific error messages
             if (validationResult.errors.length > 0) {

@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function setupMetricsCharts() {
         // Configuration
         const maxDataPoints = 60;
-        let timeWindow = 60;
+        let timeWindow = 600;
         let dataInterval;
 
         // Get canvas elements
@@ -859,9 +859,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="metrics-header">
                     <h2>System Metrics</h2>
                     <div class="time-range">
-                        <button class="time-btn active" data-range="60">60s</button>
+                        <button class="time-btn" data-range="60">60s</button>
                         <button class="time-btn" data-range="300">5min</button>
-                        <button class="time-btn" data-range="600">10min</button>
+                        <button class="time-btn active" data-range="600">10min</button>
                     </div>
                 </div>
                 <div class="metrics-charts">

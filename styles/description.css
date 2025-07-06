@@ -76,6 +76,10 @@
     background-color: var(--gray-color);
 }
 
+.tags-view .stream-visibility.unlisted {
+    background-color: var(--warning-color);
+}
+
 /* 修复tags-view下thumbnail显示问题 */
 .tags-view .stream-thumbnail {
     height: 100px;
@@ -86,7 +90,7 @@
 }
 
 .tags-view .stream-thumbnail img {
-    width: fit-content;
+    /* width: fit-content; */
     height: 100%;
     object-fit: cover;
 }

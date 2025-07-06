@@ -83,6 +83,19 @@
     line-height: 1em;
 }
 
+.preloader-debug-info {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--dark-color, #202124);
+    word-break: break-all;
+    line-height: 1.3;
+    text-align: center;
+    font-family: 'Consolas', 'Monaco', monospace;
+    position: absolute;
+    left: 12px;
+    top: 12px;
+}
+
 .wrapper,
 .wrapper:before,
 .wrapper:after {

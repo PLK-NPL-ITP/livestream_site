@@ -3,410 +3,1046 @@
  * Stream Utilities Module
  * 
  * This module provides the following functionalities:
- * 1. Stream item initialization and management
+ * 1. Stream item initialization and management from API
  * 2. Dynamic time display and formatting
- * 3. Viewers count management with random fluctuations
- * 4. Unique ID generation for stream items
- * 5. Public API for external manipulation of stream items
- * 6. Demo stream items generation
+ * 3. Real-time stream data fetching via long polling
+ * 4. Stream status management (planned, streaming, pausing, ended, replay)
+ * 5. Intelligent incremental updates for changed data only
+ * 6. Smart stream group reorganization on status changes
  * 
  * Core Implementation:
  * - Uses data attributes to store stream metadata
- * - Updates time displays at regular intervals
- * - Provides realistic viewer count simulation
+ * - Updates only changed content to optimize performance
+ * - Fetches real stream data from /api/get-streams endpoint
  * - Integrates with other modules through public API
+ * - Advanced incremental update system
  */
 
 document.addEventListener('DOMContentLoaded', function () {
     /************************************
-     * INITIALIZATION
+     * INITIALIZATION & STATE
      ************************************/
     // DOM elements
     const publicStreams = document.getElementById('public-streams');
-    let streamItems = document.querySelectorAll('.stream-item');
     
-    // Initialize
-    initializeStreamItems();
+    // State management
+    let currentStreams = new Map(); // Cache for current streams data
+    let pollingInterval = null;
+    let isPolling = false;
     
-    // Start time updaters
-    startTimeUpdater();
+    // Initialize the module
+    initialize();
     
     /************************************
-     * STREAM ITEM MANAGEMENT
+     * MAIN INITIALIZATION
      ************************************/
     /**
-     * Initializes all stream items with necessary data
-     * Sets default values for missing attributes
+     * Initialize the module
      */
-    function initializeStreamItems() {
-        streamItems.forEach(item => {
-            // Generate ID if missing
-            if (!item.getAttribute('data-id')) {
-                const uniqueId = generateUniqueId();
-                item.setAttribute('data-id', uniqueId);
-            }
-            
-            // Set default start time if missing
-            if (!item.getAttribute('data-time')) {
-                // Default to random 1-5 hours ago
-                const randomHours = Math.floor(Math.random() * 5) + 1;
-                const randomMinutes = Math.floor(Math.random() * 60);
-                const startTime = new Date();
-                startTime.setHours(startTime.getHours() - randomHours);
-                startTime.setMinutes(startTime.getMinutes() - randomMinutes);
-                
-                item.setAttribute('data-time', startTime.toISOString());
-            }
-            
-            // Update time display
-            updateTimeDisplay(item);
-            
-            // Set random viewers count if missing
-            if (!item.getAttribute('data-viewers')) {
-                const randomViewers = Math.floor(Math.random() * 100) + 5; // Random between 5-104
-                item.setAttribute('data-viewers', randomViewers);
-            }
-            
-            // Update viewers display
-            updateViewersDisplay(item);
-        });
-    }
-    
-    /**
-     * Generates a unique ID in format xxx-xxxx
-     * @returns {string} Unique ID string
-     */
-    function generateUniqueId() {
-        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        let id = '';
+    function initialize() {
+        // Start long polling
+        startLongPolling();
         
-        // Generate first 3 characters
-        for (let i = 0; i < 3; i++) {
-            id += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
+        // Initialize user group UI
+        updateUserGroupUI();
         
-        id += '-';
-        
-        // Generate last 4 characters
-        for (let i = 0; i < 4; i++) {
-            id += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        
-        return id;
+        // Listen for auth state changes
+        setupAuthEventListeners();
     }
     
     /************************************
-     * DISPLAY UPDATES
+     * UTILITY FUNCTIONS
      ************************************/
     /**
-     * Updates the time display for a stream item
-     * @param {HTMLElement} streamItem - The stream item element
-     */
-    function updateTimeDisplay(streamItem) {
-        const timeElement = streamItem.querySelector('.stream-meta');
-        const startTimeStr = streamItem.getAttribute('data-time');
-        
-        if (timeElement && startTimeStr) {
-            const startTime = new Date(startTimeStr);
-            const currentTime = new Date();
-            const timeDiff = getTimeDifference(startTime, currentTime);
-            
-            // Preserve viewers part when updating time
-            const viewersText = timeElement.textContent.split('•')[1] || '';
-            timeElement.textContent = `Started ${timeDiff} ago • ${viewersText.trim()}`;
-        }
-    }
-    
-    /**
-     * Updates the viewers count display for a stream item
-     * @param {HTMLElement} streamItem - The stream item element
-     */
-    function updateViewersDisplay(streamItem) {
-        const metaElement = streamItem.querySelector('.stream-meta');
-        const viewers = streamItem.getAttribute('data-viewers');
-        
-        if (metaElement && viewers) {
-            // Preserve time part when updating viewers
-            const timeText = metaElement.textContent.split('•')[0] || '';
-            metaElement.textContent = `${timeText.trim()} • ${viewers} viewers`;
-        }
-    }
-    
-    /**
-     * Calculates and formats time difference into human-readable string
-     * @param {Date} startDate - The start date
-     * @param {Date} endDate - The end date (usually current time)
+     * Calculate time difference and return formatted string
+     * @param {Date} startTime - Start time
+     * @param {Date} currentTime - Current time
      * @returns {string} Formatted time difference
      */
-    function getTimeDifference(startDate, endDate) {
-        // Calculate millisecond difference
-        const diff = Math.abs(endDate - startDate);
+    function getTimeDifference(startTime, currentTime) {
+        const diffMs = currentTime - startTime;
+        const diffSeconds = Math.floor(diffMs / 1000);
+        const diffMinutes = Math.floor(diffSeconds / 60);
+        const diffHours = Math.floor(diffMinutes / 60);
+        const diffDays = Math.floor(diffHours / 24);
         
-        // Calculate hours, minutes, seconds
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        
-        // Format output
-        if (hours > 0) {
-            return `${hours}h ${minutes}m ${seconds}s`;
-        } else if (minutes > 0) {
-            return `${minutes}m ${seconds}s`;
+        if (diffSeconds < 60) {
+            return `${diffSeconds}s`;
+        } else if (diffMinutes < 60) {
+            return `${diffMinutes}m`;
+        } else if (diffHours < 24) {
+            return `${diffHours}h`;
         } else {
-            return `${seconds}s`;
+            return `${diffDays}d`;
         }
     }
     
     /**
-     * Starts interval timers for updating time and viewer counts
+     * Format viewer count with proper suffixes
+     * @param {number} count - Viewer count
+     * @returns {string} Formatted viewer count
      */
-    function startTimeUpdater() {
-        // Update time display every 5 seconds
-        setInterval(() => {
-            // Re-query all stream items to include dynamically added ones
-            const currentStreamItems = document.querySelectorAll('.stream-item');
-            currentStreamItems.forEach(updateTimeDisplay);
-        }, 5000);
+    function formatViewerCount(count) {
+        if (count < 1000) {
+            return count.toString();
+        } else if (count < 1000000) {
+            return (count / 1000).toFixed(1).replace('.0', '') + 'K';
+        } else {
+            return (count / 1000000).toFixed(1).replace('.0', '') + 'M';
+        }
+    }
+    
+    /**
+     * Get current user group from authAPI profile
+     * @returns {string} User group (visitor, user, streamer, manager, admin)
+     */
+    function getCurrentUserGroup() {
+        const currentProfile = window.authAPI ? window.authAPI.getCurrentProfile() : null;
         
-        // Randomly update viewer counts every 10 seconds
-        setInterval(() => {
-            const currentStreamItems = document.querySelectorAll('.stream-item');
-            currentStreamItems.forEach(item => {
-                if (Math.random() > 0.7) { // 30% chance to update
-                    const currentViewers = parseInt(item.getAttribute('data-viewers') || '0');
-                    const change = Math.floor(Math.random() * 5) - 2; // Random change between -2 and +2
-                    const newViewers = Math.max(1, currentViewers + change); // Ensure at least 1 viewer
-                    
-                    item.setAttribute('data-viewers', newViewers);
-                    updateViewersDisplay(item);
-                }
-            });
-        }, 10000);
+        if (!currentProfile?.user_group) {
+            return 'visitor';
+        }
+        
+        if (Array.isArray(currentProfile.user_group)) {
+            const groups = currentProfile.user_group;
+            const hierarchy = ['visitor', 'user', 'streamer', 'manager', 'admin'];
+            return groups.reduce((highest, group) => {
+                const currentIndex = hierarchy.indexOf(group);
+                const highestIndex = hierarchy.indexOf(highest);
+                return currentIndex > highestIndex ? group : highest;
+            }, 'visitor');
+        }
+        
+        return currentProfile.user_group;
     }
     
     /************************************
-     * PUBLIC API
+     * USER GROUP MANAGEMENT
      ************************************/
     /**
-     * Sets the viewer count for a specific stream
-     * @param {string} streamId - Stream ID in format xxx-xxxx
-     * @param {number} viewers - New viewer count
-     * @returns {boolean} Success status
+     * Update UI based on user group permissions
      */
-    window.setStreamViewers = function(streamId, viewers) {
-        if (!streamId || isNaN(viewers)) return false;
+    function updateUserGroupUI() {
+        const userGroup = getCurrentUserGroup();
         
-        const streamItem = document.querySelector(`.stream-item[data-id="${streamId}"]`);
-        if (streamItem) {
-            streamItem.setAttribute('data-viewers', viewers);
-            updateViewersDisplay(streamItem);
-            return true;
+        // Handle visibility filter dropdown
+        const visibilityDropdown = document.querySelector('.visibility-filter');
+        const unlistedOption = document.querySelector('.visibility-option[data-value="unlisted"]');
+        
+        if (visibilityDropdown) {
+            if (userGroup === 'visitor') {
+                visibilityDropdown.style.display = 'none';
+            } else {
+                visibilityDropdown.style.display = '';
+                
+                if (unlistedOption) {
+                    if (userGroup === 'admin') {
+                        unlistedOption.style.display = '';
+                    } else {
+                        unlistedOption.style.display = 'none';
+                    }
+                }
+            }
         }
         
-        return false;
-    };
+        console.log(`UI initialized for user group: ${userGroup}`);
+    }
     
     /**
-     * Sets the start time for a specific stream
-     * @param {string} streamId - Stream ID in format xxx-xxxx
-     * @param {Date|string} startTime - New start time
-     * @returns {boolean} Success status
+     * Setup auth event listeners
      */
-    window.setStreamStartTime = function(streamId, startTime) {
-        if (!streamId || !startTime) return false;
+    function setupAuthEventListeners() {
+        if (window.authAPI) {
+            window.authAPI.on(function(event) {
+                if (event.detail.type === 'profile-updated') {
+                    // Update UI when auth state changes
+                    setTimeout(() => {
+                        updateUserGroupUI();
+                        // Trigger additional polling on profile update
+                        fetchStreams();
+                    }, 100);
+                }
+            });
+        }
+    }
+    
+    /************************************
+     * LONG POLLING IMPLEMENTATION
+     ************************************/
+    /**
+     * Start long polling for stream data
+     */
+    function startLongPolling() {
+        if (isPolling) return;
         
-        const streamItem = document.querySelector(`.stream-item[data-id="${streamId}"]`);
-        if (streamItem) {
-            // Ensure startTime is ISO format string
-            const timeStr = startTime instanceof Date ? startTime.toISOString() : startTime;
-            streamItem.setAttribute('data-time', timeStr);
-            updateTimeDisplay(streamItem);
-            return true;
+        isPolling = true;
+        
+        // Initial fetch
+        fetchStreams();
+        
+        // Start polling every 3 seconds
+        pollingInterval = setInterval(() => {
+            fetchStreams();
+        }, 3000);
+        
+        console.log('Long polling started for streams');
+    }
+    
+    /**
+     * Stop long polling
+     */
+    function stopLongPolling() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+        isPolling = false;
+        console.log('Long polling stopped');
+    }
+    
+    /**
+     * Fetch streams from API
+     */
+    async function fetchStreams() {
+        try {
+            let streams;
+            
+            if (window.authAPI) {
+                console.log('Fetching streams with authAPI');
+                streams = await window.authAPI.makeRequest('/api/get-streams', {}, true);
+            } else {
+                const response = await fetch('/api/get-streams');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                streams = await response.json();
+            }
+            
+            if (Array.isArray(streams)) {
+                processStreamData(streams);
+            }
+            
+        } catch (error) {
+            console.error('Failed to fetch streams:', error.message);
+        }
+    }
+    
+    /************************************
+     * INTELLIGENT STREAM DATA PROCESSING
+     ************************************/
+    /**
+     * Process incoming stream data with intelligent updates
+     * @param {Array} streams - Array of stream objects from API
+     */
+    function processStreamData(streams) {
+        const existingStreams = new Set(currentStreams.keys());
+        const newStreamIds = new Set(streams.map(s => s.stream_id));
+        
+        let hasNewStreams = false;
+        let hasRemovedStreams = false;
+        let hasStreamUpdates = false;
+        
+        // Process each stream
+        streams.forEach(stream => {
+            const streamId = stream.stream_id;
+            const existingStream = currentStreams.get(streamId);
+            
+            if (!existingStream) {
+                // New stream - add it
+                hasNewStreams = true;
+                addNewStream(stream);
+            } else {
+                // Check if stream actually has changes before updating
+                const hasChanges = checkStreamChanges(existingStream, stream);
+                if (hasChanges) {
+                    hasStreamUpdates = true;
+                    updateExistingStream(existingStream, stream);
+                }
+            }
+        });
+        
+        // Remove streams that no longer exist
+        existingStreams.forEach(streamId => {
+            if (!newStreamIds.has(streamId)) {
+                hasRemovedStreams = true;
+                removeStream(streamId);
+            }
+        });
+        
+        updateAllTimeDisplays();
+        
+        // Update snapshots for active streams
+        // updateStreamSnapshots();
+
+        // Update cache
+        currentStreams.clear();
+        streams.forEach(stream => {
+            currentStreams.set(stream.stream_id, stream);
+        });
+        
+        // Only apply external filters and sorting if there were actual changes
+        if (hasNewStreams || hasRemovedStreams || hasStreamUpdates) {
+            applyExternalFiltersAndSorting();
+        }
+    }
+    
+    /**
+     * Check if a stream has any changes that require updates
+     * @param {Object} oldData - Previous stream data
+     * @param {Object} newData - New stream data from API
+     * @returns {boolean} True if stream has changes
+     */
+    function checkStreamChanges(oldData, newData) {
+        // Quick checks for the most common changes
+        if (oldData.stream_status !== newData.stream_status) return true;
+        if (oldData.viewer_count !== newData.viewer_count) return true;
+        if (oldData.stream_title !== newData.stream_title) return true;
+        if (oldData.stream_description !== newData.stream_description) return true;
+        if (oldData.streamer_name !== newData.streamer_name) return true;
+        
+        // More expensive checks for arrays
+        const oldTagsString = JSON.stringify(oldData.stream_tags || []);
+        const newTagsString = JSON.stringify(newData.stream_tags || []);
+        if (oldTagsString !== newTagsString) return true;
+        
+        const oldQualityString = JSON.stringify(oldData.quality_info || []);
+        const newQualityString = JSON.stringify(newData.quality_info || []);
+        if (oldQualityString !== newQualityString) return true;
+        
+        return false; // No changes detected
+    }
+    
+    /**
+     * Add a new stream to the UI
+     * @param {Object} streamData - Stream data from API
+     */
+    function addNewStream(streamData) {
+        const displayData = convertAPIStreamToDisplay(streamData);
+        if (!displayData) return;
+        
+        // Find correct group position
+        const targetGroup = getStreamGroup(streamData.stream_status);
+        const insertPosition = findInsertPosition(targetGroup);
+        
+        // Create stream element
+        const streamElement = createStreamElement(displayData);
+        
+        // Insert at correct position
+        if (insertPosition.nextSibling) {
+            publicStreams.insertBefore(streamElement, insertPosition.nextSibling);
+        } else {
+            publicStreams.appendChild(streamElement);
         }
         
-        return false;
-    };
+        // Ensure group separator exists
+        ensureGroupSeparator(targetGroup, insertPosition.separator);
+        
+        console.log(`Added new stream: ${streamData.stream_title}`);
+    }
     
     /**
-     * Adds a new stream item to the list
-     * @param {Object} options - Stream item configuration options
-     * @returns {HTMLElement} Newly created stream item element
+     * Update an existing stream with new data
+     * @param {Object} oldData - Previous stream data
+     * @param {Object} newData - New stream data from API
      */
-    window.addStreamItem = function(options) {
-        // Check required parameters
-        if (!options.thumbnailSrc || !options.qualityInfo || !options.title || 
-            !options.author || !options.visibility || !options.tags) {
-            console.error('Missing required parameters for adding stream item');
+    function updateExistingStream(oldData, newData) {
+        const streamElement = document.querySelector(`[data-id="${newData.stream_id}"]`);
+        if (!streamElement) return;
+        
+        let needsGroupMove = false;
+        let hasAnyChanges = false;
+        
+        // Check for status change (requires group move)
+        if (oldData.stream_status !== newData.stream_status) {
+            needsGroupMove = true;
+            hasAnyChanges = true;
+            updateStreamStatus(streamElement, newData.stream_status);
+        }
+        
+        // Check for viewer count change
+        if (oldData.viewer_count !== newData.viewer_count) {
+            hasAnyChanges = true;
+            updateViewerCount(streamElement, newData.viewer_count);
+        }
+        
+        // Check for title change
+        if (oldData.stream_title !== newData.stream_title) {
+            hasAnyChanges = true;
+            updateStreamTitle(streamElement, newData.stream_title);
+        }
+        
+        // Check for description change
+        if (oldData.stream_description !== newData.stream_description) {
+            hasAnyChanges = true;
+            updateStreamDescription(streamElement, newData.stream_description);
+        }
+        
+        // Check for author change
+        if (oldData.streamer_name !== newData.streamer_name) {
+            hasAnyChanges = true;
+            updateStreamAuthor(streamElement, newData.streamer_name);
+        }
+        
+        // Check for tags change (more efficient comparison)
+        const oldTagsString = JSON.stringify(oldData.stream_tags || []);
+        const newTagsString = JSON.stringify(newData.stream_tags || []);
+        if (oldTagsString !== newTagsString) {
+            hasAnyChanges = true;
+            updateStreamTags(streamElement, newData.stream_tags);
+        }
+        
+        // Check for quality change (more efficient comparison)
+        const oldQualityString = JSON.stringify(oldData.quality_info || []);
+        const newQualityString = JSON.stringify(newData.quality_info || []);
+        if (oldQualityString !== newQualityString) {
+            hasAnyChanges = true;
+            updateStreamQuality(streamElement, newData.quality_info);
+        }
+        
+        // Move to correct group if status changed
+        if (needsGroupMove) {
+            moveStreamToCorrectGroup(streamElement, newData.stream_status);
+        }
+        
+        // Log only if there were actual changes
+        if (hasAnyChanges) {
+            console.log(`Updated stream: ${newData.stream_title} (${newData.stream_id})`);
+        }
+    }
+    
+    /**
+     * Remove a stream from the UI
+     * @param {string} streamId - Stream ID to remove
+     */
+    function removeStream(streamId) {
+        const streamElement = document.querySelector(`[data-id="${streamId}"]`);
+        if (streamElement) {
+            streamElement.remove();
+            currentStreams.delete(streamId);
+            console.log(`Removed stream: ${streamId}`);
+        }
+    }
+    
+    /************************************
+     * INDIVIDUAL UPDATE FUNCTIONS
+     ************************************/
+    /**
+     * Update stream status and badge
+     * @param {HTMLElement} streamElement - Stream element
+     * @param {string} status - New status
+     */
+    function updateStreamStatus(streamElement, status) {
+        const oldStatus = streamElement.getAttribute('data-status');
+        
+        // Only proceed if status actually changed
+        if (oldStatus === status) return;
+        
+        streamElement.setAttribute('data-status', status);
+        
+        const badge = streamElement.querySelector('.live-badge');
+        if (!badge) return;
+        
+        // Determine new badge text and classes
+        let badgeText = '';
+        let badgeClasses = 'live-badge';
+        
+        switch (status) {
+            case 'streaming':
+            case 'pausing':
+                badgeText = 'LIVE';
+                break;
+            case 'planned':
+                badgeText = 'PLANNED';
+                badgeClasses += ' planned';
+                break;
+            case 'replay':
+                badgeText = 'REPLAY';
+                badgeClasses += ' replay';
+                break;
+            case 'ended':
+                badgeText = 'ENDED';
+                badgeClasses += ' ended';
+                break;
+        }
+        
+        // Only update badge if text or classes changed
+        const currentBadgeText = badge.textContent.trim();
+        const currentBadgeClass = badge.className;
+        
+        if (currentBadgeText !== badgeText) {
+            badge.textContent = badgeText;
+        }
+        
+        if (currentBadgeClass !== badgeClasses) {
+            badge.className = badgeClasses;
+        }
+        
+        // Handle quality info visibility based on status change
+        const qualityElement = streamElement.querySelector('.quality-info');
+        if (status === 'planned') {
+            // Hide quality for planned streams
+            if (qualityElement && qualityElement.style.display !== 'none') {
+                qualityElement.style.display = 'none';
+            }
+        } else if (oldStatus === 'planned' && status !== 'planned') {
+            // Show quality when changing from planned to other status
+            if (qualityElement && qualityElement.style.display === 'none') {
+                qualityElement.style.display = '';
+            } else if (!qualityElement) {
+                // Create quality element if it doesn't exist
+                const thumbnail = streamElement.querySelector('.stream-thumbnail');
+                if (thumbnail) {
+                    const qualityHTML = `<span class="quality-info">1280x720 • H264</span>`;
+                    thumbnail.insertAdjacentHTML('beforeend', qualityHTML);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Update viewer count
+     * @param {HTMLElement} streamElement - Stream element
+     * @param {number} viewerCount - New viewer count
+     */
+    function updateViewerCount(streamElement, viewerCount) {
+        const currentViewers = parseInt(streamElement.getAttribute('data-viewers')) || 0;
+        
+        // Only update if viewer count actually changed
+        if (currentViewers !== viewerCount) {
+            streamElement.setAttribute('data-viewers', viewerCount);
+            updateTimeAndViewerDisplay(streamElement);
+        }
+    }
+    
+    /**
+     * Update stream title
+     * @param {HTMLElement} streamElement - Stream element
+     * @param {string} title - New title
+     */
+    function updateStreamTitle(streamElement, title) {
+        const titleElement = streamElement.querySelector('h3');
+        if (titleElement) {
+            const currentTitle = titleElement.textContent.trim();
+            const newTitle = (title || '').trim();
+            
+            // Only update if title actually changed
+            if (currentTitle !== newTitle) {
+                titleElement.textContent = newTitle;
+            }
+        }
+    }
+    
+    /**
+     * Update stream description
+     * @param {HTMLElement} streamElement - Stream element
+     * @param {string} description - New description
+     */
+    function updateStreamDescription(streamElement, description) {
+        const descElement = streamElement.querySelector('.stream-description');
+        if (descElement) {
+            const currentDescription = descElement.textContent.trim();
+            const newDescription = (description || '').trim();
+            const hasContent = newDescription.length > 0;
+            const currentDisplay = descElement.style.display;
+            const newDisplay = hasContent ? 'block' : 'none';
+            const hasDescriptionClass = streamElement.classList.contains('has-description');
+            
+            // Only update text if description actually changed
+            if (currentDescription !== newDescription) {
+                descElement.textContent = newDescription;
+            }
+            
+            // Only update display style if it actually changed
+            if (currentDisplay !== newDisplay) {
+                descElement.style.display = newDisplay;
+            }
+            
+            // Only update class if it actually changed
+            if (hasContent && !hasDescriptionClass) {
+                streamElement.classList.add('has-description');
+            } else if (!hasContent && hasDescriptionClass) {
+                streamElement.classList.remove('has-description');
+            }
+        }
+    }
+    
+    /**
+     * Update stream author
+     * @param {HTMLElement} streamElement - Stream element
+     * @param {string} author - New author name
+     */
+    function updateStreamAuthor(streamElement, author) {
+        const authorElement = streamElement.querySelector('.stream-author');
+        if (authorElement) {
+            const currentAuthor = authorElement.textContent.trim();
+            const newAuthor = (author || 'Unknown Streamer').trim();
+            
+            // Only update if author actually changed
+            if (currentAuthor !== newAuthor) {
+                authorElement.textContent = newAuthor;
+            }
+        }
+    }
+    
+    /**
+     * Update stream tags
+     * @param {HTMLElement} streamElement - Stream element
+     * @param {Array} tags - New tags array
+     */
+    function updateStreamTags(streamElement, tags) {
+        const infoLeft = streamElement.querySelector('.stream-info-left');
+        if (!infoLeft) return;
+        
+        const tagsArray = Array.isArray(tags) ? tags : [];
+        const newTagsString = tagsArray.join(',');
+        const currentTagsString = streamElement.getAttribute('data-tags') || '';
+        
+        // Only update if tags actually changed
+        if (currentTagsString !== newTagsString) {
+            // Remove existing tags
+            const existingTags = infoLeft.querySelectorAll('.stream-tag');
+            existingTags.forEach(tag => tag.remove());
+            
+            // Add new tags
+            const tagsHTML = tagsArray.map(tag => 
+                `<span class="stream-tag">${tag}</span>`
+            ).join('');
+            
+            if (tagsHTML) {
+                infoLeft.insertAdjacentHTML('beforeend', tagsHTML);
+            }
+            
+            // Update data attribute
+            streamElement.setAttribute('data-tags', newTagsString);
+        }
+    }
+    
+    /**
+     * Update stream quality
+     * @param {HTMLElement} streamElement - Stream element
+     * @param {Array} qualityInfo - New quality info
+     */
+    function updateStreamQuality(streamElement, qualityInfo) {
+        const qualityElement = streamElement.querySelector('.quality-info');
+        const status = streamElement.getAttribute('data-status');
+        
+        if (status === 'planned') {
+            // For planned streams, hide quality info
+            if (qualityElement && qualityElement.style.display !== 'none') {
+                qualityElement.style.display = 'none';
+            }
+        } else {
+            const formattedQuality = formatQualityInfo(qualityInfo);
+            
+            // For other streams, show and update quality info
+            if (qualityElement) {
+                const currentQuality = qualityElement.textContent.trim();
+                
+                // Only update text if quality actually changed
+                if (currentQuality !== formattedQuality) {
+                    qualityElement.textContent = formattedQuality;
+                }
+                
+                // Only update display if currently hidden
+                if (qualityElement.style.display === 'none') {
+                    qualityElement.style.display = '';
+                }
+            } else {
+                // Create quality element if it doesn't exist
+                const thumbnail = streamElement.querySelector('.stream-thumbnail');
+                if (thumbnail) {
+                    const qualityHTML = `<span class="quality-info">${formattedQuality}</span>`;
+                    thumbnail.insertAdjacentHTML('beforeend', qualityHTML);
+                }
+            }
+        }
+    }
+    
+    
+    /************************************
+     * GROUP MANAGEMENT FUNCTIONS
+     ************************************/
+    /**
+     * Get stream group based on status
+     * @param {string} status - Stream status
+     * @returns {string} Group name
+     */
+    function getStreamGroup(status) {
+        switch (status) {
+            case 'planned':
+                return 'planned';
+            case 'streaming':
+            case 'pausing':
+                return 'live';
+            case 'replay':
+                return 'replay';
+            case 'ended':
+            default:
+                return 'ended';
+        }
+    }
+    
+    /**
+     * Find insert position for a stream group
+     * @param {string} groupName - Group name
+     * @returns {Object} Insert position info
+     */
+    function findInsertPosition(groupName) {
+        const groupOrder = ['planned', 'live', 'replay', 'ended'];
+        const groupIndex = groupOrder.indexOf(groupName);
+        
+        let lastElementOfGroup = null;
+        let separatorElement = null;
+        
+        // Find existing separator for this group
+        const separators = document.querySelectorAll('.stream-separator');
+        for (const separator of separators) {
+            const label = separator.getAttribute('data-label');
+            if (label && label.toLowerCase().includes(groupName)) {
+                separatorElement = separator;
+                break;
+            }
+        }
+        
+        // Find last element of the group
+        const groupClasses = {
+            'planned': '[data-status="planned"]',
+            'live': '[data-status="streaming"], [data-status="pausing"]',
+            'replay': '[data-status="replay"]',
+            'ended': '[data-status="ended"]'
+        };
+        
+        const groupElements = document.querySelectorAll(groupClasses[groupName]);
+        if (groupElements.length > 0) {
+            lastElementOfGroup = groupElements[groupElements.length - 1];
+        }
+        
+        return {
+            nextSibling: lastElementOfGroup ? lastElementOfGroup.nextSibling : null,
+            separator: separatorElement
+        };
+    }
+    
+    /**
+     * Move stream to correct group
+     * @param {HTMLElement} streamElement - Stream element
+     * @param {string} newStatus - New status
+     */
+    function moveStreamToCorrectGroup(streamElement, newStatus) {
+        const targetGroup = getStreamGroup(newStatus);
+        const insertPosition = findInsertPosition(targetGroup);
+        
+        // Remove from current position
+        streamElement.remove();
+        
+        // Insert at correct position
+        if (insertPosition.nextSibling) {
+            publicStreams.insertBefore(streamElement, insertPosition.nextSibling);
+        } else {
+            publicStreams.appendChild(streamElement);
+        }
+        
+        // Ensure group separator exists
+        ensureGroupSeparator(targetGroup, insertPosition.separator);
+        
+        console.log(`Moved stream to ${targetGroup} group`);
+    }
+    
+    /**
+     * Ensure group separator exists
+     * @param {string} groupName - Group name
+     * @param {HTMLElement} existingSeparator - Existing separator element
+     */
+    function ensureGroupSeparator(groupName, existingSeparator) {
+        if (existingSeparator) return;
+        
+        const groupLabels = {
+            'planned': 'Planned Streams',
+            'live': 'Live Streams',
+            'replay': 'Replay Streams',
+            'ended': 'Ended Streams'
+        };
+        
+        const label = groupLabels[groupName];
+        if (!label) return;
+        
+        // Create separator
+        const separatorHTML = `
+            <div class="stream-separator grid-break" data-label="${label}">
+                <div class="separator-line"></div>
+                <span class="separator-label">${label}</span>
+                <div class="separator-line"></div>
+            </div>
+        `;
+        
+        // Find position to insert separator
+        const groupOrder = ['planned', 'live', 'replay', 'ended'];
+        const currentGroupIndex = groupOrder.indexOf(groupName);
+        
+        let insertBefore = null;
+        
+        // Find the first stream of this group or next group
+        for (let i = currentGroupIndex; i < groupOrder.length; i++) {
+            const group = groupOrder[i];
+            const groupClasses = {
+                'planned': '[data-status="planned"]',
+                'live': '[data-status="streaming"], [data-status="pausing"]',
+                'replay': '[data-status="replay"]',
+                'ended': '[data-status="ended"]'
+            };
+            
+            const firstStreamOfGroup = document.querySelector(groupClasses[group]);
+            if (firstStreamOfGroup) {
+                insertBefore = firstStreamOfGroup;
+                break;
+            }
+        }
+        
+        if (insertBefore) {
+            insertBefore.insertAdjacentHTML('beforebegin', separatorHTML);
+        } else {
+            publicStreams.insertAdjacentHTML('beforeend', separatorHTML);
+        }
+    }
+    
+    /************************************
+     * STREAM ELEMENT CREATION
+     ************************************/
+    /**
+     * Convert API stream format to internal display format
+     * @param {Object} apiStream - Stream object from API
+     * @returns {Object} Display format object
+     */
+    function convertAPIStreamToDisplay(apiStream) {
+        try {
+            const qualityInfo = formatQualityInfo(apiStream.quality_info);
+            const visibility = apiStream.stream_visibility || 'unlisted';
+            const status = apiStream.stream_status || 'planned';
+            const viewers = apiStream.viewer_count || 0;
+            let thumbnailSrc = 'assets/images/stream1.jpg';
+            if (status != 'planned') {
+                thumbnailSrc = `/streams/${apiStream.stream_code}/snapshot.jpg`;
+            }
+            const tags = Array.isArray(apiStream.stream_tags) ? apiStream.stream_tags : [];
+            
+            return {
+                streamCode: apiStream.stream_code,
+                streamId: apiStream.stream_id,
+                thumbnailSrc: thumbnailSrc,
+                qualityInfo: qualityInfo,
+                title: apiStream.stream_title ,
+                author_id: apiStream.streamer_id,
+                author: apiStream.streamer_name,
+                startTime: apiStream.active_time,
+                viewers: viewers,
+                visibility: visibility,
+                tags: tags,
+                description: apiStream.stream_description || "The streamer seems provide a empty description...... Let's have a guess or just click in to view now!",
+                status: status
+            };
+        } catch (error) {
+            console.error('Error converting API stream data:', error);
             return null;
         }
+    }
+    
+    /**
+     * Create stream element from display data
+     * @param {Object} displayData - Display format data
+     * @returns {HTMLElement} Stream element
+     */
+    function createStreamElement(displayData) {
+        const startTime = displayData.startTime instanceof Date ? 
+            displayData.startTime : new Date(displayData.startTime);
         
-        // Get or generate ID
-        const streamId = options.id || generateUniqueId();
+        // Determine badge text and class
+        let badgeText = 'LIVE';
+        let badgeClass = 'live-badge';
         
-        // Set start time, default to current time
-        let startTime;
-        if (options.startTime) {
-            startTime = options.startTime instanceof Date ? 
-                options.startTime : new Date(options.startTime);
-        } else {
-            // Default to random 1-5 hours ago
-            startTime = new Date();
-            const randomHours = Math.floor(Math.random() * 5) + 1;
-            const randomMinutes = Math.floor(Math.random() * 60);
-            startTime.setHours(startTime.getHours() - randomHours);
-            startTime.setMinutes(startTime.getMinutes() - randomMinutes);
+        switch (displayData.status) {
+            case 'streaming':
+            case 'pausing':
+                badgeText = 'LIVE';
+                badgeClass = 'live-badge';
+                break;
+            case 'planned':
+                badgeText = 'PLANNED';
+                badgeClass = 'live-badge planned';
+                break;
+            case 'replay':
+                badgeText = 'REPLAY';
+                badgeClass = 'live-badge replay';
+                break;
+            case 'ended':
+                badgeText = 'ENDED';
+                badgeClass = 'live-badge ended';
+                break;
         }
         
-        // Set viewers count, default to random value
-        const viewers = options.viewers || Math.floor(Math.random() * 100) + 5;
-        
         // Create tags HTML
-        const tagsHTML = options.tags.map(tag => 
+        const tagsHTML = displayData.tags.map(tag => 
             `<span class="stream-tag">${tag}</span>`
         ).join('');
         
         // Create stream item HTML
         const streamHTML = `
-            <div class="stream-item" data-visibility="${options.visibility}" data-tags="${options.tags.join(',')}" data-id="${streamId}" data-time="${startTime.toISOString()}" data-viewers="${viewers}">
+            <div class="stream-item" 
+                 data-visibility="${displayData.visibility}" 
+                 data-tags="${displayData.tags.join(',')}" 
+                 data-id="${displayData.streamId}"
+                 author-id="${displayData.author_id}"
+                 stream-code="${displayData.streamCode}"
+                 data-time="${startTime.toISOString()}" 
+                 data-viewers="${displayData.viewers}"
+                 data-status="${displayData.status}">
                 <div class="stream-thumbnail">
-                    <img src="${options.thumbnailSrc}" alt="Stream thumbnail">
-                    <span class="live-badge">LIVE</span>
-                    <span class="quality-info">${options.qualityInfo}</span>
+                    <img src="${displayData.thumbnailSrc}" alt="Stream thumbnail">
+                    <span class="${badgeClass}">${badgeText}</span>
+                    ${displayData.status === 'planned' ? '' : `<span class="quality-info">${displayData.qualityInfo}</span>`}
                 </div>
                 <div class="stream-info">
                     <div class="stream-info-left">
-                        <h3>${options.title}</h3>
-                        <p class="stream-author">${options.author}</p>
-                        <p class="stream-meta">Started 0s ago • ${viewers} viewers</p>
-                        <span class="stream-visibility${options.visibility === 'private' ? ' private' : ''}">${options.visibility === 'private' ? 'Private' : 'Public'}</span>
+                        <h3>${displayData.title}</h3>
+                        <p class="stream-author">${displayData.author}</p>
+                        <p class="stream-meta">Started 0s ago • ${displayData.viewers} viewers</p>
+                        <span class="stream-visibility${displayData.visibility === 'private' ? ' private' : ''}">${displayData.visibility === 'private' ? 'Private' : displayData.visibility === 'unlisted' ? 'Unlisted' : 'Public'}</span>
                         ${tagsHTML}
                     </div>
-                    <p class="stream-description">${options.description || ''}</p>
+                    <p class="stream-description" style="display: ${displayData.description ? 'block' : 'none'}">${displayData.description || ''}</p>
                 </div>
             </div>
         `;
         
-        // Add to DOM
-        publicStreams.insertAdjacentHTML('beforeend', streamHTML);
-        
-        // Get new element
-        const newStreamItem = publicStreams.lastElementChild;
+        // Create element
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = streamHTML;
+        const streamElement = tempDiv.firstElementChild;
         
         // Update time display
-        updateTimeDisplay(newStreamItem);
+        updateTimeAndViewerDisplay(streamElement);
         
-        // Process description text (if in list view mode)
+        return streamElement;
+    }
+    
+    /**
+     * Format quality info from API data
+     * @param {Array} qualityInfo - Quality info array from API
+     * @returns {string} Formatted quality string (Resolution • Codec)
+     */
+    function formatQualityInfo(qualityInfo) {
+        if (!Array.isArray(qualityInfo) || qualityInfo.length === 0) {
+            return '1920x1080 • H264';
+        }
+        
+        const videoInfo = qualityInfo.find(info => info.type === 'video');
+        if (videoInfo && videoInfo.width && videoInfo.height && videoInfo.codec) {
+            const resolution = `${videoInfo.width}x${videoInfo.height}`;
+            const codec = videoInfo.codec || 'H264';
+            return `${resolution} • ${codec}`;
+        }
+        
+        // Fallback if video info is incomplete
+        return '1280x720 • H264';
+    }
+    
+    /************************************
+     * TIME AND DISPLAY UPDATES
+     ************************************/
+    /**
+     * Update all time displays
+     */
+    function updateAllTimeDisplays() {
+        const streamItems = document.querySelectorAll('.stream-item');
+        streamItems.forEach(updateTimeAndViewerDisplay);
+    }
+    
+    /**
+     * Update snapshots for all active streams (non-planned)
+     */
+    function updateStreamSnapshots() {
+        const activeStreamItems = document.querySelectorAll('.stream-item:not([data-status="planned"])');
+        activeStreamItems.forEach(updateStreamSnapshot);
+    }
+    
+    /**
+     * Update snapshot for a single stream item
+     * @param {HTMLElement} streamItem - The stream item element
+     */
+    function updateStreamSnapshot(streamItem) {
+        const streamCode = streamItem.getAttribute('stream-code');
+        const status = streamItem.getAttribute('data-status');
+        
+        if (!streamCode || status === 'planned') return;
+        
+        const thumbnailImg = streamItem.querySelector('.stream-thumbnail img');
+        if (!thumbnailImg) return;
+        
+        // Update snapshot with timestamp
+        const timestamp = Date.now();
+        const newSrc = `/streams/${streamCode}/snapshot.jpg?t=${timestamp}`;
+        thumbnailImg.src = newSrc;
+    }
+    
+    /**
+     * Updates the time and viewer display for a stream item
+     * @param {HTMLElement} streamItem - The stream item element
+     */
+    function updateTimeAndViewerDisplay(streamItem) {
+        const timeElement = streamItem.querySelector('.stream-meta');
+        const startTimeStr = streamItem.getAttribute('data-time');
+        const viewers = parseInt(streamItem.getAttribute('data-viewers')) || 0;
+        const status = streamItem.getAttribute('data-status') || 'ended';
+        
+        if (!timeElement || !startTimeStr) return;
+        
+        const startTime = new Date(startTimeStr);
+        const currentTime = new Date();
+        
+        let newTimeText = '';
+        
+        switch (status) {
+            case 'planned':
+                // For planned streams, don't show time and viewer count
+                newTimeText = 'Scheduled Stream';
+                break;
+            case 'streaming':
+            case 'pausing':
+                newTimeText = `Started ${getTimeDifference(startTime, currentTime)} ago • ${formatViewerCount(viewers)} viewers`;
+                break;
+            case 'replay':
+                newTimeText = `Recorded ${getTimeDifference(startTime, currentTime)} ago • ${formatViewerCount(viewers)} viewers`;
+                break;
+            case 'ended':
+                newTimeText = `Ended ${getTimeDifference(startTime, currentTime)} ago • ${formatViewerCount(viewers)} viewers`;
+                break;
+            default:
+                newTimeText = `${getTimeDifference(startTime, currentTime)} ago • ${formatViewerCount(viewers)} viewers`;
+        }
+        
+        // Only update DOM if the text actually changed
+        const currentTimeText = timeElement.textContent.trim();
+        if (currentTimeText !== newTimeText) {
+            timeElement.textContent = newTimeText;
+        }
+    }
+    
+    /**
+     * Apply external filters and sorting if available
+     */
+    function applyExternalFiltersAndSorting() {
         if (typeof window.processStreamDescriptions === 'function') {
             window.processStreamDescriptions();
         }
         
-        // Trigger refiltering (if filters.js exists)
         if (typeof window.applyFilters === 'function') {
             window.applyFilters();
         }
         
-        // Apply current sorting (if set)
         if (typeof window.applySorting === 'function') {
             window.applySorting();
         }
-        
-        return newStreamItem;
-    };
+    }
     
-    /**
-     * Clears all stream items from the list
-     * @returns {boolean} Success status
-     */
-    window.clearAllStreamItems = function() {
-        if (publicStreams) {
-            publicStreams.innerHTML = '';
-            return true;
-        }
-        return false;
-    };
-    
-    /************************************
-     * DEMO STREAMS
-     ************************************/
-    /**
-     * Adds example stream items for demonstration
-     * @returns {boolean} Success status
-     */
-    window.addExampleStreamItems = function() {
-        // Clear existing items
-        window.clearAllStreamItems();
-        
-        // Example 1: Weekly Team Meeting
-        window.addStreamItem({
-            thumbnailSrc: 'assets/images/stream1.jpg',
-            qualityInfo: '1080p • 30fps',
-            title: 'Weekly Team Meeting',
-            author: 'Jane Doe',
-            startTime: '2025-05-19T10:30:00',
-            viewers: 45,
-            visibility: 'public',
-            tags: ['Discussion', 'Meeting', 'Planning'],
-            description: 'Discussion of current project progress, upcoming milestones, and team assignments for the next sprint.',
-            id: 'abc-1234'
-        });
-        
-        // Example 2: Q&A Session
-        window.addStreamItem({
-            thumbnailSrc: 'assets/images/stream1.jpg',
-            qualityInfo: '1080p • 30fps',
-            title: 'Q&A Session',
-            author: 'John Smith',
-            startTime: '2025-05-19T12:15:00',
-            viewers: 38,
-            visibility: 'public',
-            tags: ['QA', 'Management', 'Tools'],
-            description: 'Q&A session with the team lead about the new project management methodologies being implemented next month.'
-        });
-        
-        // Example 3: Private Meeting
-        window.addStreamItem({
-            thumbnailSrc: 'assets/images/stream1.jpg',
-            qualityInfo: '1080p • 30fps',
-            title: 'Private Strategy Meeting',
-            author: 'Alex Chen',
-            startTime: '2025-05-19T11:45:00',
-            viewers: 15,
-            visibility: 'private',
-            tags: ['General', 'Internal'],
-            description: ''
-        });
-        
-        // Example 4: API Workshop
-        window.addStreamItem({
-            thumbnailSrc: 'assets/images/stream1.jpg',
-            qualityInfo: '1080p • 30fps',
-            title: 'API Integration Workshop',
-            author: 'Sarah Johnson',
-            startTime: '2025-05-19T09:00:00',
-            viewers: 72,
-            visibility: 'public',
-            tags: ['Educational', 'Code', 'API'],
-            description: 'Live coding session demonstrating the new API integration with third-party services. Join to learn the implementation details! This hands-on session will help developers understand how to efficiently connect our platform with external services.'
-        });
-        
-        // Example 5: Product Showcase
-        window.addStreamItem({
-            thumbnailSrc: 'assets/images/stream1.jpg',
-            qualityInfo: '1080p • 30fps',
-            title: 'Product Showcase',
-            author: 'Michael Wilson',
-            startTime: '2025-05-19T13:30:00',
-            viewers: 104,
-            visibility: 'public',
-            tags: ['Product', 'Demo', 'Feature', 'Discussion', 'Meeting', 'Planning', 'Educational', 'Code', 'API'],
-            description: 'Product showcase for the upcoming release. We\'ll be demonstrating all the new features and taking feedback from the team. This live session is especially important for product managers and UX designers as we\'ll cover detailed interface changes.'
-        });
-        
-        // Process all descriptions
-        if (typeof window.processStreamDescriptions === 'function') {
-            window.processStreamDescriptions();
-        }
-        
-        return true;
-    };
+    // Expose snapshot functions
+    window.updateStreamSnapshots = updateStreamSnapshots;
 });
